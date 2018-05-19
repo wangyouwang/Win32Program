@@ -1,7 +1,7 @@
 
 
 #include "stdafx.h"
-
+#include "debugTool.h"
 LRESULT CALLBACK WindowProc(
 	IN HWND hwnd,
 	IN UINT uMsg,
@@ -71,6 +71,7 @@ LRESULT CALLBACK WindowProc(
 	IN LPARAM lParam
 	)
 {
+	dgbPrintf("uMsg=%x\n", uMsg);
 	switch(uMsg)
 	{
 	case WM_DESTROY:
