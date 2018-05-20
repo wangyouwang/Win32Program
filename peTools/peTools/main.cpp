@@ -78,19 +78,19 @@ LRESULT CALLBACK WindowProc(
 	{
 	case WM_QUIT:
 		// 不会有WM_QUIT， GetMessage 获取到 WM_QUIT 会返回 0
-		dbgPrintf("uMsg=%x wParam=%x lParam=%x\n", uMsg, wParam, lParam);
+		dbgPrintf(TEXT("uMsg=%x wParam=%x lParam=%x\n"), uMsg, wParam, lParam);
 		return 0;
 	case WM_CREATE:
-		dbgPrintf("uMsg=%x wParam=%x lParam=%x\n", uMsg, wParam, lParam);
+		dbgPrintf(TEXT("uMsg=%x wParam=%x lParam=%x\n"), uMsg, wParam, lParam);
 		break;
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		break;
 	case WM_LBUTTONDOWN:
-		dbgPrintf("uMsg=%x wParam=%x lParam=%x\n", uMsg, wParam, lParam);
+		dbgPrintf(TEXT("uMsg=%x wParam=%x lParam=%x\n"), uMsg, wParam, lParam);
 		break;
 	case WM_COMMAND:
-		dbgPrintf("uMsg=%x wParam=%x lParam=%x\n", uMsg, wParam, lParam);
+		dbgPrintf(TEXT("uMsg=%x wParam=%x lParam=%x\n"), uMsg, wParam, lParam);
 		break;
 	default:
 		return DefWindowProc(hwnd, uMsg, wParam, lParam);
@@ -105,7 +105,7 @@ void createButtons(HWND hwndmain)
 	start_x = 20;
 	start_y = 40;
 
-	width = 80;
+	width = 100;
 	hight = 25;
 
 	interval_x = 10;
@@ -117,8 +117,32 @@ void createButtons(HWND hwndmain)
 		WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON | BS_MULTILINE | BS_PUSHBUTTON ,
 		start_x,start_y,
 		width, hight,
-		hwndmain,HMENU(101),
+		hwndmain,HMENU(1010),
 		hAppInstance,NULL);
+
+	start_x += width + interval_x;
+	//start_y += hight + interval_y;
+	HWND button1_1 = CreateWindow(
+		TEXT("BUTTON"),
+		TEXT("Button1_1"),
+		WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON | BS_RADIOBUTTON,
+		start_x,start_y,
+		width, hight,
+		hwndmain,HMENU(1011),
+		hAppInstance,NULL);
+	
+	start_x += width + interval_x;
+	//start_y += hight + interval_y;
+	HWND button1_2 = CreateWindow(
+		TEXT("BUTTON"),
+		TEXT("Button1_2"),
+		WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON | BS_CHECKBOX | BS_AUTOCHECKBOX,
+		start_x,start_y,
+		width, hight,
+		hwndmain,HMENU(1012),
+		hAppInstance,NULL);
+#if 0	
+	start_x = 20;
 	//start_x += width + interval_x;
 	start_y += hight + interval_y;
 	HWND button2 = CreateWindow(
@@ -162,6 +186,16 @@ void createButtons(HWND hwndmain)
 		width, hight,
 		hwndmain,HMENU(105),
 		hAppInstance,NULL);
+#endif
+	TCHAR szClassName[100];
+	WNDCLASS wndclass_get;
+	int ll = sizeof(szClassName);
+	memset(szClassName, 0, ll);
+	GetClassName(button1, szClassName, ll-1);
+	GetClassInfo(hAppInstance, szClassName, &wndclass_get);
+
+	dbgPrintf(TEXT("wndclass_get.style=%x\n"), wndclass_get.style);
+	dbgPrintf(TEXT("wndclass_get.lpszClassName=%s\n"), wndclass_get.lpszClassName);
 
 	return ;
 }
