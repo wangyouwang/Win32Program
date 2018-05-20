@@ -14,7 +14,7 @@ int CALLBACK WinMain( __in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance
 {
 	//保存全局变量  imageBase
 	hAppInstance = hInstance;
-
+	dbgPrintf(TEXT("hAppInstance=%x\nlpCmdLine=%x\nnShowCmd=%x\n"), hAppInstance, lpCmdLine, nShowCmd);
 	//设计窗口类
 	TCHAR className[] = TEXT("My First Window");  //窗口类名
 	WNDCLASS wndclass={0}; //创建窗口类的对象 //必须初始化
@@ -78,21 +78,37 @@ LRESULT CALLBACK WindowProc(
 	{
 	case WM_QUIT:
 		// 不会有WM_QUIT， GetMessage 获取到 WM_QUIT 会返回 0
-		dbgPrintf(TEXT("uMsg=%x wParam=%x lParam=%x\n"), uMsg, wParam, lParam);
+		dbgPrintf(TEXT("WM_QUIT uMsg=%x wParam=%x lParam=%x\n"), uMsg, wParam, lParam);
 		return 0;
 	case WM_CREATE:
-		dbgPrintf(TEXT("uMsg=%x wParam=%x lParam=%x\n"), uMsg, wParam, lParam);
+		dbgPrintf(TEXT("WM_CREATE uMsg=%x wParam=%x lParam=%x\n"), uMsg, wParam, lParam);
 		break;
 	case WM_DESTROY:
+		dbgPrintf(TEXT("WM_DESTROY uMsg=%x wParam=%x lParam=%x\n"), uMsg, wParam, lParam);
 		PostQuitMessage(0);
 		break;
 	case WM_LBUTTONDOWN:
-		dbgPrintf(TEXT("uMsg=%x wParam=%x lParam=%x\n"), uMsg, wParam, lParam);
+		dbgPrintf(TEXT("WM_LBUTTONDOWN uMsg=%x wParam=%x lParam=%x\n"), uMsg, wParam, lParam);
 		break;
-	case WM_COMMAND:
-		dbgPrintf(TEXT("uMsg=%x wParam=%x lParam=%x\n"), uMsg, wParam, lParam);
+	case WM_COMMAND:  // 可以接受子窗口 比如 button 的消息
+		dbgPrintf(TEXT("WM_COMMAND uMsg=%x wParam=%x lParam=%x\n"), uMsg, wParam, lParam);
+		switch( LOWORD(wParam) )
+		{
+		case 1010:
+			MessageBox(hwnd, TEXT("1010 button!"), TEXT("Demo"), MB_OK);
+			break;
+		case 1011:
+			MessageBox(hwnd, TEXT("1011 button!"), TEXT("Demo"), MB_OK);
+			break;
+		case 1012:
+			MessageBox(hwnd, TEXT("1012 button!"), TEXT("Demo"), MB_OK);
+			break;
+		default:
+			return DefWindowProc(hwnd, uMsg, wParam, lParam);
+		}
 		break;
 	default:
+		dbgPrintf(TEXT("Other uMsg=%x wParam=%x lParam=%x\n"), uMsg, wParam, lParam);
 		return DefWindowProc(hwnd, uMsg, wParam, lParam);
 	}
 	return 0;
@@ -196,6 +212,7 @@ void createButtons(HWND hwndmain)
 
 	dbgPrintf(TEXT("wndclass_get.style=%x\n"), wndclass_get.style);
 	dbgPrintf(TEXT("wndclass_get.lpszClassName=%s\n"), wndclass_get.lpszClassName);
+	dbgPrintf(TEXT("wndclass_get.lpfnWndProc=%x\n"), wndclass_get.lpfnWndProc);
 
 	return ;
 }

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <Shlwapi.h>
 #define BUFFLENGTH 4096
+#ifdef _DEBUG
 void __cdecl OutputDebugStringF(const TCHAR* format, ...)
 {
 	va_list vlArgs;
@@ -17,3 +18,4 @@ void __cdecl OutputDebugStringF(const TCHAR* format, ...)
 	GlobalFree(strBufferW);
 	return ;
 }
+#endif
