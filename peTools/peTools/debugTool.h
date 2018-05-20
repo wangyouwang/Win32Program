@@ -4,7 +4,7 @@
 void __cdecl OutputDebugStringF(const char* format, ...);
 
 #ifdef _DEBUG
-#define dgbPrintf OutputDebugStringF
+#define dbgPrintf OutputDebugStringF
 #else
-#define dgbPrintf
+#define dbgPrintf
 #endif
