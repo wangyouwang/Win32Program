@@ -66,7 +66,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="debugTool.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="peTools.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="111.ico" />
+    <None Include="icon1.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
