@@ -10,8 +10,10 @@ void __cdecl OutputDebugStringF(const TCHAR* format, ...);
 #endif
 
 
+#if 0
 #ifdef UNICODE
 #define _stprintf swprintf
 #else
 #define _stprintf sprintf
+#endif
 #endif

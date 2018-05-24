@@ -13,6 +13,7 @@ HINSTANCE hAppInstance;
 VOID InitProcessListView(HWND hwnd);
 VOID InitModuleListView(HWND hwnd);
 VOID EnumProcess(HWND hwnd);
+DWORD GetModuleSize(TCHAR* szModuleName);
 BOOL CALLBACK DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 // 入口函数，回调函数::C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\include\winbase.h
 int CALLBACK WinMain( __in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance, 
@@ -202,53 +203,167 @@ VOID EnumProcess(HWND hwnd)
 	LV_ITEM lvItem;
 	TCHAR* tcharBuff = new TCHAR[BUFFLENGTHMAX];
 	memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
-	int iItem,iSubItem;
-
+	int iItem=0,iSubItem=0;
+	 TCHAR szModName[MAX_PATH];
 	//遍历windows 所有进程， 得到所有进程信息
+	DWORD aProcesses[1024], cbNeeded, cProcesses;
+	DWORD i;
+	TCHAR szProcessName_system[MAX_PATH] = TEXT("<system Idle Process>");
+	if ( !EnumProcesses( aProcesses, sizeof(aProcesses), &cbNeeded ) )
+	{
+		dbgPrintf(TEXT("EnumProcesses error! \n"));
+		return ;
+	}
+	cProcesses = cbNeeded / sizeof(DWORD);
+	for( i=0; i<cProcesses; i++ )
+	{
+		DWORD processID = aProcesses[i];
+		if( processID != NULL)
+		{
+			HANDLE hProcess = OpenProcess( PROCESS_QUERY_INFORMATION |	PROCESS_VM_READ,
+				FALSE, processID ); //PROCESS_ALL_ACCESS
+			if( hProcess != NULL )
+			{
+				HMODULE hMod;
+				DWORD cbNeeded;
+				if ( EnumProcessModules( hProcess, &hMod, sizeof(hMod), 
+					&cbNeeded) )
+				{
+					if( GetModuleFileNameEx( hProcess, hMod, szModName,
+						sizeof(szModName) / sizeof(TCHAR)))
+					{
+						DWORD imageSize = GetModuleSize(szModName);
 
-	//进程信息 保存到ListItem 
-	
-	//ListItem 添加到ListView
-	memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
-	memset(&lvItem, 0, sizeof(LV_ITEM));
-	lvItem.mask = LVIF_TEXT;
-	_stprintf(tcharBuff, TEXT("%s"), TEXT("C://PATH//COMMAND.exe"));
-	lvItem.pszText = tcharBuff;
-	lvItem.iItem = 0;
-	lvItem.iSubItem = 0;
-	ListView_InsertItem(hwnd, &lvItem);
-	//SendMessage(hwnd, LVM_INSERTITEM, 0, (LPARAM)(const LV_ITEM *)(&lvItem));
+						// now we got the process, pid, imagebase, imagesize
+						// they are: szModName, processID, hMod, imageSize
+						iSubItem=0;
+						memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
+						memset(&lvItem, 0, sizeof(LV_ITEM));
+						lvItem.mask = LVIF_TEXT;
+						_stprintf(tcharBuff, TEXT("%s"), szModName);
+						lvItem.pszText = tcharBuff;
+						lvItem.iItem = iItem;
+						lvItem.iSubItem = iSubItem++;
+						ListView_InsertItem(hwnd, &lvItem);
+						//SendMessage(hwnd, LVM_INSERTITEM, 0, (LPARAM)(const LV_ITEM *)(&lvItem));
 
-	memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
-	memset(&lvItem, 0, sizeof(LV_ITEM));
-	lvItem.mask = LVIF_TEXT;
-	_stprintf(tcharBuff, TEXT("%s"), TEXT("448"));
-	lvItem.pszText = tcharBuff;
-	lvItem.iItem = 0;
-	lvItem.iSubItem = 1;
-	ListView_SetItem(hwnd, &lvItem);
-	//SendMessage(hwnd, LVM_SETITEM, 0, (LPARAM)(const LV_ITEM *)(&lvItem));
+						memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
+						memset(&lvItem, 0, sizeof(LV_ITEM));
+						lvItem.mask = LVIF_TEXT;
+						_stprintf(tcharBuff, TEXT("%d"), processID);
+						lvItem.pszText = tcharBuff;
+						lvItem.iItem = iItem;
+						lvItem.iSubItem = iSubItem++;
+						ListView_SetItem(hwnd, &lvItem);
+						//SendMessage(hwnd, LVM_SETITEM, 0, (LPARAM)(const LV_ITEM *)(&lvItem));
 
-	memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
-	memset(&lvItem, 0, sizeof(LV_ITEM));
-	lvItem.mask = LVIF_TEXT;
-	_stprintf(tcharBuff, TEXT("%s"), TEXT("0x400000"));
-	lvItem.pszText = tcharBuff;
-	lvItem.iItem = 0;
-	lvItem.iSubItem = 2;
-	ListView_SetItem(hwnd, &lvItem);
-	//SendMessage(hwnd, LVM_SETITEM, 0, (LPARAM)(const LV_ITEM *)(&lvItem));
+						memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
+						memset(&lvItem, 0, sizeof(LV_ITEM));
+						lvItem.mask = LVIF_TEXT;
+						_stprintf(tcharBuff, TEXT("0x%08X"), (DWORD)hMod);
+						lvItem.pszText = tcharBuff;
+						lvItem.iItem = iItem;
+						lvItem.iSubItem = iSubItem++;
+						ListView_SetItem(hwnd, &lvItem);
+						//SendMessage(hwnd, LVM_SETITEM, 0, (LPARAM)(const LV_ITEM *)(&lvItem));
 
-	memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
-	memset(&lvItem, 0, sizeof(LV_ITEM));
-	lvItem.mask = LVIF_TEXT;
-	_stprintf(tcharBuff, TEXT("%s"), TEXT("0x250000"));
-	lvItem.pszText = tcharBuff;
-	lvItem.iItem = 0;
-	lvItem.iSubItem = 3;
-	ListView_SetItem(hwnd, &lvItem);
-	//SendMessage(hwnd, LVM_SETITEM, 0, (LPARAM)(const LV_ITEM *)(&lvItem));
+						memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
+						memset(&lvItem, 0, sizeof(LV_ITEM));
+						lvItem.mask = LVIF_TEXT;
+						_stprintf(tcharBuff, TEXT("0x%08X"), imageSize);
+						lvItem.pszText = tcharBuff;
+						lvItem.iItem = iItem;
+						lvItem.iSubItem = iSubItem++;
+						ListView_SetItem(hwnd, &lvItem);
+						//SendMessage(hwnd, LVM_SETITEM, 0, (LPARAM)(const LV_ITEM *)(&lvItem));
+						iItem++;
+					}
+				}
+				else  // <system Idle Process>
+				{
+					DWORD imageSize = 0;
+
+					// now get the process, pid, imagebase, imagesize
+					// they are: szModName, processID, hMod, imageSize
+					iSubItem=0;
+					memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
+					memset(&lvItem, 0, sizeof(LV_ITEM));
+					lvItem.mask = LVIF_TEXT;
+					_stprintf(tcharBuff, TEXT("%s"), szProcessName_system);
+					lvItem.pszText = tcharBuff;
+					lvItem.iItem = iItem;
+					lvItem.iSubItem = iSubItem++;
+					ListView_InsertItem(hwnd, &lvItem);
+					//SendMessage(hwnd, LVM_INSERTITEM, 0, (LPARAM)(const LV_ITEM *)(&lvItem));
+
+					memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
+					memset(&lvItem, 0, sizeof(LV_ITEM));
+					lvItem.mask = LVIF_TEXT;
+					_stprintf(tcharBuff, TEXT("%d"), processID);
+					lvItem.pszText = tcharBuff;
+					lvItem.iItem = iItem;
+					lvItem.iSubItem = iSubItem++;
+					ListView_SetItem(hwnd, &lvItem);
+					//SendMessage(hwnd, LVM_SETITEM, 0, (LPARAM)(const LV_ITEM *)(&lvItem));
+
+					memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
+					memset(&lvItem, 0, sizeof(LV_ITEM));
+					lvItem.mask = LVIF_TEXT;
+					_stprintf(tcharBuff, TEXT("0x%08X"), (DWORD)0);
+					lvItem.pszText = tcharBuff;
+					lvItem.iItem = iItem;
+					lvItem.iSubItem = iSubItem++;
+					ListView_SetItem(hwnd, &lvItem);
+					//SendMessage(hwnd, LVM_SETITEM, 0, (LPARAM)(const LV_ITEM *)(&lvItem));
+
+					memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
+					memset(&lvItem, 0, sizeof(LV_ITEM));
+					lvItem.mask = LVIF_TEXT;
+					_stprintf(tcharBuff, TEXT("0x%08X"), (DWORD)0);
+					lvItem.pszText = tcharBuff;
+					lvItem.iItem = iItem;
+					lvItem.iSubItem = iSubItem++;
+					ListView_SetItem(hwnd, &lvItem);
+					//SendMessage(hwnd, LVM_SETITEM, 0, (LPARAM)(const LV_ITEM *)(&lvItem));
+					iItem++;
+				}	
+			}
+			CloseHandle(hProcess);
+			hProcess = NULL;
+
+		}
+	}
 
 	delete[] tcharBuff;
 	tcharBuff = NULL;
+}
+
+DWORD GetModuleSize(TCHAR* szModuleName)
+{
+#define DOSHEADERSIZE  sizeof(IMAGE_DOS_HEADER)
+#define NTHEADERSIZE sizeof(IMAGE_NT_HEADERS)
+	IMAGE_DOS_HEADER* pDOSHeader = NULL;
+	IMAGE_NT_HEADERS* pNTHeaders = NULL;
+	FILE* file = NULL;
+	BYTE fileBufferDos[DOSHEADERSIZE];
+	BYTE fileBufferNt[NTHEADERSIZE];
+	DWORD readNumber = 0;
+	errno_t err;
+	err = _tfopen_s(&file, szModuleName, TEXT("rb"));
+	if(err != NULL)
+		return 0;
+	// 读取DOS头 找到e_lfanew
+	readNumber = fread_s(fileBufferDos, DOSHEADERSIZE, DOSHEADERSIZE, 1, file);
+	if(readNumber != 1)
+		return 0;
+	pDOSHeader = (IMAGE_DOS_HEADER*)fileBufferDos;
+	// 根据e_lfanew 找到NT头位置
+	fseek(file, pDOSHeader->e_lfanew, SEEK_SET);
+	// 读取NT头
+	readNumber = fread_s(fileBufferNt, NTHEADERSIZE, NTHEADERSIZE, 1, file);
+	if(readNumber != 1)
+		return 0;
+	pNTHeaders = (IMAGE_NT_HEADERS*)fileBufferNt;
+	// 返回NT头中OptionalHeader.SizeofImage
+	return pNTHeaders->OptionalHeader.SizeOfImage;
 }

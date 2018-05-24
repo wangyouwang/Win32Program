@@ -36,7 +36,6 @@ int _tmain(int argc, _TCHAR* argv[])
 	}
 
 	return 0;
-	return 0;
 }
 // 注 image size 需要读取路径指定文件 更具可选pe头获取
 void PrintProcessNameAndID( DWORD processID )
