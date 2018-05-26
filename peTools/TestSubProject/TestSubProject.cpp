@@ -8,25 +8,29 @@
 #include <psapi.h>
 DWORD GetModuleSize(TCHAR* szModuleName);
 void PrintProcessNameAndID( DWORD processID );
+void TestListProcessAndModules();
+void TestShowPeFileStruct();
 int _tmain(int argc, _TCHAR* argv[])
 {
+	//TestListProcessAndModules();
+	TestShowPeFileStruct();
+	return 0;
+}
+// 第一部分 列出进程和进程中所有模块
+void TestListProcessAndModules()
+{
 	// Get the list of process identifiers.
-
 	DWORD aProcesses[1024], cbNeeded, cProcesses;
 	unsigned int i;
-
 	if ( !EnumProcesses( aProcesses, sizeof(aProcesses), &cbNeeded ) )
 	{
-		return 1;
+		return ;
 	}
 
-
 	// Calculate how many process identifiers were returned.
-
 	cProcesses = cbNeeded / sizeof(DWORD);
 
 	// Print the name and process identifier for each process.
-
 	for ( i = 0; i < cProcesses; i++ )
 	{
 		if( aProcesses[i] != 0 )
@@ -34,9 +38,8 @@ int _tmain(int argc, _TCHAR* argv[])
 			PrintProcessNameAndID( aProcesses[i] );
 		}
 	}
-
-	return 0;
 }
+
 // 注 image size 需要读取路径指定文件 更具可选pe头获取
 void PrintProcessNameAndID( DWORD processID )
 {
@@ -124,4 +127,11 @@ DWORD GetModuleSize(TCHAR* szModuleName)
 	pNTHeaders = (IMAGE_NT_HEADERS*)fileBufferNt;
 // 返回NT头中OptionalHeader.SizeofImage
 	return pNTHeaders->OptionalHeader.SizeOfImage;
+}
+
+
+// 第二部分 显示Pe文件结构
+void TestShowPeFileStruct()
+{
+
 }
