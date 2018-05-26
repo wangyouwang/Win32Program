@@ -52,9 +52,10 @@ void PrintProcessNameAndID( DWORD processID )
 	if (NULL != hProcess )
 	{
 		HMODULE hMods[1024];
+		HMODULE hMod;
 		DWORD cbNeeded;
 
-		if ( EnumProcessModules( hProcess, hMods, sizeof(hMods), 
+		if ( EnumProcessModules( hProcess, &hMod, sizeof(hMod), 
 			&cbNeeded) )
 		{
 			//GetModuleBaseName( hProcess, NULL/*hMods[0]*/, szProcessName, 
@@ -62,11 +63,11 @@ void PrintProcessNameAndID( DWORD processID )
 			//Print the process name and identifier.
 			//_tprintf( TEXT("%s  (PID: %u)\n"), szProcessName, processID );
 			// Printf all the modules in this process.
-			for ( i = 0; i < (cbNeeded / sizeof(HMODULE)); i++ )
+			for ( i = 0; i < 1; i++ )
 			{
 				 TCHAR szModName[MAX_PATH];
 				  // Get the full path to the module's file.
-				 if ( GetModuleFileNameEx( hProcess, hMods[i], szModName,
+				 if ( GetModuleFileNameEx( hProcess, hMod, szModName,
 					 sizeof(szModName) / sizeof(TCHAR)))
 				 {/*IMAGE_DOS_HEADER*/
 						DWORD imageSize = GetModuleSize(szModName);
@@ -74,7 +75,7 @@ void PrintProcessNameAndID( DWORD processID )
 						{
 							// Print the Process name and handle value.
 							_tprintf( TEXT("<process>: %s pid: %d imageBase:0x%08X imagesize:0x%08x\n"),
-								szModName, processID, hMods[i], imageSize );
+								szModName, processID, hMod, imageSize );
 						}
 						else
 						{

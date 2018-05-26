@@ -3,16 +3,20 @@
 #include "stdafx.h"
 #include "debugTool.h"
 
-#if 1 // VC6 need 
+
 #include <CommCtrl.h>
 #pragma  comment(lib, "comctl32.lib")
-#endif
+#define BUFFLENGTHMAX 1024
+#define MAXPROCESS 1024
+#define MAXMODULES  1024
 
 //全局变量 imageBase
 HINSTANCE hAppInstance;
 VOID InitProcessListView(HWND hwnd);
 VOID InitModuleListView(HWND hwnd);
 VOID EnumProcess(HWND hwnd);
+VOID EnumModules(HWND hListProcess, WPARAM wparam, LPARAM lparam);
+VOID ShowModules(HWND hListModule, DWORD processId);
 DWORD GetModuleSize(TCHAR* szModuleName);
 BOOL CALLBACK DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 // 入口函数，回调函数::C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\include\winbase.h
@@ -38,6 +42,7 @@ int CALLBACK WinMain( __in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance
 // 消息回调函数  处理过的消息返回TRUE 否则返回FALSE
 BOOL CALLBACK DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+	NMHDR* nmhdr = NULL;
 	HICON hicon = NULL;
 	BOOL nRet = FALSE;
 	switch(uMsg)
@@ -52,12 +57,27 @@ BOOL CALLBACK DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		PostQuitMessage(0);
 		nRet = TRUE;
 		break;
+	case WM_NOTIFY:
+		{
+			dbgPrintf(TEXT("wParam=0x%x\n"),wParam);
+			nmhdr = (NMHDR*) lParam;
+			HWND hListProcess = GetDlgItem(hwnd, IDC_LIST_PROCESS);
+			dbgPrintf(TEXT("lParam:nmhdr.hwndFrom = %x, hListProcess:IDC_LIST_PROCESS = %x"), nmhdr->hwndFrom, hListProcess );
+			if(wParam == IDC_LIST_PROCESS && nmhdr->code == NM_CLICK)
+			{
+				EnumModules(hListProcess, wParam, lParam);
+				nRet = TRUE;
+			}
+		}
+		break;
 	case WM_INITDIALOG:   //WM_CREATE:
 		hicon = LoadIcon(hAppInstance, MAKEINTRESOURCE(IDI_ICON_XPS) );
 		//设置图标
 		SendMessage(hwnd, WM_SETICON, ICON_BIG, (DWORD)hicon);
 		SendMessage(hwnd, WM_SETICON, ICON_SMALL, (DWORD)hicon);
 		SendMessage(hwnd, WM_SETICON, ICON_SMALL2, (DWORD)hicon);
+
+		SetWindowPos(hwnd, NULL, 100, 100, 0, 0, SWP_SHOWWINDOW|SWP_NOSIZE);
 		InitProcessListView(hwnd);
 		InitModuleListView(hwnd);
 		nRet = TRUE;
@@ -131,8 +151,9 @@ VOID InitProcessListView(HWND hwnd)
 	//第1列
 	lv.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
 	lv.pszText = TEXT("进程路径");
-	lv.cx = 420;
+	lv.cx = 620;
 	lv.iSubItem = 0;
+	//ListView_InsertColumn(hListProcess, 0, &lv);
 	SendMessage(hListProcess, LVM_INSERTCOLUMN, 0, (DWORD)&lv);
 
 	//第2列
@@ -175,7 +196,7 @@ VOID InitModuleListView(HWND hwnd)
 	//第1列
 	lv.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
 	lv.pszText = TEXT("模块路径");
-	lv.cx = 520;
+	lv.cx = 720;
 	lv.iSubItem = 0;
 	SendMessage(hListModule, LVM_INSERTCOLUMN, 0, (DWORD)&lv);
 
@@ -194,19 +215,15 @@ VOID InitModuleListView(HWND hwnd)
 	SendMessage(hListModule, LVM_INSERTCOLUMN, 2, (DWORD)&lv);
 }
 
-// 
-
-
 VOID EnumProcess(HWND hwnd)
 {
-#define BUFFLENGTHMAX 1024
 	LV_ITEM lvItem;
 	TCHAR* tcharBuff = new TCHAR[BUFFLENGTHMAX];
 	memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
 	int iItem=0,iSubItem=0;
 	 TCHAR szModName[MAX_PATH];
 	//遍历windows 所有进程， 得到所有进程信息
-	DWORD aProcesses[1024], cbNeeded, cProcesses;
+	DWORD aProcesses[MAXPROCESS], cbNeeded, cProcesses;
 	DWORD i;
 	TCHAR szProcessName_system[MAX_PATH] = TEXT("<system Idle Process>");
 	if ( !EnumProcesses( aProcesses, sizeof(aProcesses), &cbNeeded ) )
@@ -240,7 +257,7 @@ VOID EnumProcess(HWND hwnd)
 						memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
 						memset(&lvItem, 0, sizeof(LV_ITEM));
 						lvItem.mask = LVIF_TEXT;
-						_stprintf(tcharBuff, TEXT("%s"), szModName);
+						_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("%s"), szModName);
 						lvItem.pszText = tcharBuff;
 						lvItem.iItem = iItem;
 						lvItem.iSubItem = iSubItem++;
@@ -250,7 +267,7 @@ VOID EnumProcess(HWND hwnd)
 						memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
 						memset(&lvItem, 0, sizeof(LV_ITEM));
 						lvItem.mask = LVIF_TEXT;
-						_stprintf(tcharBuff, TEXT("%d"), processID);
+						_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("%d"), processID);
 						lvItem.pszText = tcharBuff;
 						lvItem.iItem = iItem;
 						lvItem.iSubItem = iSubItem++;
@@ -260,7 +277,7 @@ VOID EnumProcess(HWND hwnd)
 						memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
 						memset(&lvItem, 0, sizeof(LV_ITEM));
 						lvItem.mask = LVIF_TEXT;
-						_stprintf(tcharBuff, TEXT("0x%08X"), (DWORD)hMod);
+						_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("0x%08X"), (DWORD)hMod);
 						lvItem.pszText = tcharBuff;
 						lvItem.iItem = iItem;
 						lvItem.iSubItem = iSubItem++;
@@ -270,7 +287,7 @@ VOID EnumProcess(HWND hwnd)
 						memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
 						memset(&lvItem, 0, sizeof(LV_ITEM));
 						lvItem.mask = LVIF_TEXT;
-						_stprintf(tcharBuff, TEXT("0x%08X"), imageSize);
+						_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("0x%08X"), imageSize);
 						lvItem.pszText = tcharBuff;
 						lvItem.iItem = iItem;
 						lvItem.iSubItem = iSubItem++;
@@ -289,7 +306,7 @@ VOID EnumProcess(HWND hwnd)
 					memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
 					memset(&lvItem, 0, sizeof(LV_ITEM));
 					lvItem.mask = LVIF_TEXT;
-					_stprintf(tcharBuff, TEXT("%s"), szProcessName_system);
+					_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("%s"), szProcessName_system);
 					lvItem.pszText = tcharBuff;
 					lvItem.iItem = iItem;
 					lvItem.iSubItem = iSubItem++;
@@ -299,7 +316,7 @@ VOID EnumProcess(HWND hwnd)
 					memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
 					memset(&lvItem, 0, sizeof(LV_ITEM));
 					lvItem.mask = LVIF_TEXT;
-					_stprintf(tcharBuff, TEXT("%d"), processID);
+					_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("%d"), processID);
 					lvItem.pszText = tcharBuff;
 					lvItem.iItem = iItem;
 					lvItem.iSubItem = iSubItem++;
@@ -309,7 +326,7 @@ VOID EnumProcess(HWND hwnd)
 					memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
 					memset(&lvItem, 0, sizeof(LV_ITEM));
 					lvItem.mask = LVIF_TEXT;
-					_stprintf(tcharBuff, TEXT("0x%08X"), (DWORD)0);
+					_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("0x%08X"), (DWORD)0);
 					lvItem.pszText = tcharBuff;
 					lvItem.iItem = iItem;
 					lvItem.iSubItem = iSubItem++;
@@ -319,7 +336,7 @@ VOID EnumProcess(HWND hwnd)
 					memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
 					memset(&lvItem, 0, sizeof(LV_ITEM));
 					lvItem.mask = LVIF_TEXT;
-					_stprintf(tcharBuff, TEXT("0x%08X"), (DWORD)0);
+					_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("0x%08X"), (DWORD)0);
 					lvItem.pszText = tcharBuff;
 					lvItem.iItem = iItem;
 					lvItem.iSubItem = iSubItem++;
@@ -364,6 +381,114 @@ DWORD GetModuleSize(TCHAR* szModuleName)
 	if(readNumber != 1)
 		return 0;
 	pNTHeaders = (IMAGE_NT_HEADERS*)fileBufferNt;
+	fclose(file);
 	// 返回NT头中OptionalHeader.SizeofImage
 	return pNTHeaders->OptionalHeader.SizeOfImage;
+}
+
+VOID EnumModules(HWND hListProcess, WPARAM wparam, LPARAM lparam)
+{
+	DWORD dwRowId;
+	LV_ITEM lvItem;
+	BOOL bRet = FALSE;
+	DWORD processID = 0;
+	HWND hMainDlg;
+	HWND hListModule;
+
+	TCHAR* tcharBuff = new TCHAR[BUFFLENGTHMAX];
+	memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
+
+	// 获取选中行
+	//SendMessage(hListProcess, LVM_GETNEXTITEM, -1, LVNI_SELECTED);
+	dwRowId = ListView_GetNextItem(hListProcess, -1, LVNI_SELECTED);
+	dbgPrintf(TEXT("dwRowId=%d\n"), dwRowId);
+	if(dwRowId == -1)
+	{
+		dbgPrintf(TEXT("Error!\n"));
+	}
+	//获取选中行的PID
+	lvItem.iItem = dwRowId; // the row 
+	lvItem.iSubItem = 1; // the column: pid
+	lvItem.mask =  LVIF_TEXT;
+	lvItem.pszText = tcharBuff;
+	lvItem.cchTextMax = BUFFLENGTHMAX;
+	//(BOOL)SendMessage((hwnd), LVM_GETITEM, 0, (LPARAM)(LV_ITEM *)(pitem))
+	bRet = ListView_GetItem(hListProcess, &lvItem);
+	if(!bRet)
+	{
+		dbgPrintf(TEXT("get pid failed\n"));
+		return ;
+	}
+	dbgPrintf(TEXT("Get PID: %s\n"), lvItem.pszText);
+
+	_stscanf_s(lvItem.pszText,TEXT("%d"), &processID);
+
+	hMainDlg = GetParent(hListProcess);
+	hListModule = GetDlgItem(hMainDlg, IDC_LIST_MODULE);
+	ListView_DeleteAllItems(hListModule);
+	// 在 hListModule 显示 processID 对应的 modules
+	ShowModules(hListModule, processID);
+
+	delete[] tcharBuff;
+	return ;
+}
+
+VOID ShowModules(HWND hListModule, DWORD processId)
+{
+	LV_ITEM lvItem;
+	DWORD iItem=0, iSubItem=0;
+	HMODULE hMods[MAXMODULES];
+	DWORD cbNeeded;
+	DWORD i,iMax;
+	TCHAR szModName[MAX_PATH];
+	TCHAR tcharBuff[BUFFLENGTHMAX];
+
+	HANDLE hProcess = OpenProcess( PROCESS_QUERY_INFORMATION | PROCESS_VM_READ,
+		FALSE, processId ); //PROCESS_ALL_ACCESS
+	
+	if (NULL == hProcess || FALSE == EnumProcessModules( hProcess, hMods, sizeof(hMods), &cbNeeded) )
+	{
+		dbgPrintf(TEXT("Error EnumProcessModules\n"));
+		return ;
+	}
+	iMax = cbNeeded/sizeof(DWORD);
+	for( i=0; i<iMax; i++)
+	{
+		memset(szModName, 0, sizeof(szModName));
+		if( GetModuleFileNameEx(hProcess, hMods[i], szModName, sizeof(szModName)/sizeof(TCHAR)) )
+		{
+			iSubItem = 0;
+			DWORD imageSize = GetModuleSize(szModName);
+			// now the informations: szModName, hMods[i], imageSize; 
+						
+			memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
+			memset(&lvItem, 0, sizeof(LV_ITEM));
+			_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("%s"), szModName);
+			lvItem.mask = LVIF_TEXT;
+			lvItem.iItem = iItem;
+			lvItem.iSubItem = iSubItem++;
+			lvItem.pszText = tcharBuff;
+			ListView_InsertItem(hListModule, &lvItem);
+
+			memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
+			memset(&lvItem, 0, sizeof(LV_ITEM));
+			_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("0x%08x"), (DWORD)hMods[i]);
+			lvItem.mask = LVIF_TEXT;
+			lvItem.iItem = iItem;
+			lvItem.iSubItem = iSubItem++;
+			lvItem.pszText = tcharBuff;
+			ListView_SetItem(hListModule, &lvItem);
+
+			memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
+			memset(&lvItem, 0, sizeof(LV_ITEM));
+			_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("0x%08x"), imageSize);
+			lvItem.mask = LVIF_TEXT;
+			lvItem.iItem = iItem;
+			lvItem.iSubItem = iSubItem++;
+			lvItem.pszText = tcharBuff;
+			ListView_SetItem(hListModule, &lvItem);
+		}
+	}
+	CloseHandle(hProcess);
+	hProcess = NULL;
 }
