@@ -131,7 +131,69 @@ DWORD GetModuleSize(TCHAR* szModuleName)
 
 
 // 第二部分 显示Pe文件结构
+TCHAR inFileName[1024] = TEXT("D:\\win32Program\\Projects\\github_Win32Program\\peTools\\Debug\\peTools_dbg.exe");
+TCHAR logFileName[1024] = TEXT("D:\\win32Program\\Projects\\github_Win32Program\\peTools\\Debug\\peTools_show.log");
 void TestShowPeFileStruct()
 {
+	// 变量声明
+	int nameLength = 0;
+	FILE* inFile = NULL;
+	errno_t err = 0;
+	DWORD inFileSize = 0;
+	BYTE* fileBuffer = NULL;
+	DWORD nRet;
+	IMAGE_DOS_HEADER* pDosHeader = NULL;
+	IMAGE_NT_HEADERS* pImageNtHeader = NULL;
+	IMAGE_FILE_HEADER* pImageFileHeader = NULL;
+	IMAGE_OPTIONAL_HEADER32* pImageOptionHeader32 = NULL;
+	IMAGE_OPTIONAL_HEADER64* pImageOptionHeader64 = NULL;
 
+
+	// 打开文件 获取大小 申请空间 加载到内存
+#if 1
+	{
+		err = _tfopen_s(&inFile, inFileName, TEXT("rb"));
+		if( err!=0 )
+		{
+			_tprintf_s(TEXT("err = %d\n"),err);
+		}
+		assert(inFile!=NULL);
+		err = fseek(inFile, 0, SEEK_END); assert(err==0);
+		inFileSize = ftell(inFile); assert(inFileSize!=0);
+
+		fileBuffer = new BYTE[inFileSize];assert(fileBuffer!=NULL);	
+		err = fseek(inFile, 0, SEEK_SET);assert(err==0);
+		nRet = fread(fileBuffer, sizeof(BYTE), inFileSize, inFile);
+		if(nRet != inFileSize)
+		{
+			_tprintf_s(TEXT("read file error!\n"));
+		}
+		else
+		{
+			_tprintf_s(TEXT("read file ok! read 0x%x bytes"), inFileSize);
+		}
+		fclose(inFile);
+		inFile = NULL;
+	}
+#endif
+	//初始化几个头部指针  pDosHeader pImageNtHeader pImageFileHeader ? pImageOptionHeader32 : pImageOptionHeader64
+	assert(inFileSize > sizeof(IMAGE_DOS_HEADER));
+	pDosHeader = (IMAGE_DOS_HEADER*)fileBuffer;
+	pImageNtHeader =  (IMAGE_NT_HEADERS*)(fileBuffer + pDosHeader->e_lfanew);
+	pImageFileHeader = &(pImageNtHeader->FileHeader);
+	if( pImageFileHeader->SizeOfOptionalHeader == sizeof(IMAGE_OPTIONAL_HEADER32) )
+	{
+		pImageOptionHeader32 = &(pImageNtHeader->OptionalHeader);
+	}
+	else if( pImageFileHeader->SizeOfOptionalHeader == sizeof(IMAGE_OPTIONAL_HEADER64) )
+	{
+		pImageOptionHeader64 = (IMAGE_OPTIONAL_HEADER64*)&(pImageNtHeader->OptionalHeader);
+	}
+	else
+	{
+		_tprintf_s(TEXT("read file wasn't PE format!\n"));
+		return ;
+	}
+
+	delete[] fileBuffer;
 }

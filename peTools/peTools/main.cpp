@@ -257,7 +257,7 @@ VOID EnumProcess(HWND hwnd)
 						memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
 						memset(&lvItem, 0, sizeof(LV_ITEM));
 						lvItem.mask = LVIF_TEXT;
-						_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("%s"), szModName);
+						_stprintf_s(tcharBuff, BUFFLENGTHMAX*sizeof(TCHAR), TEXT("%s"), szModName);
 						lvItem.pszText = tcharBuff;
 						lvItem.iItem = iItem;
 						lvItem.iSubItem = iSubItem++;
@@ -267,7 +267,7 @@ VOID EnumProcess(HWND hwnd)
 						memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
 						memset(&lvItem, 0, sizeof(LV_ITEM));
 						lvItem.mask = LVIF_TEXT;
-						_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("%d"), processID);
+						_stprintf_s(tcharBuff, BUFFLENGTHMAX*sizeof(TCHAR), TEXT("%d"), processID);
 						lvItem.pszText = tcharBuff;
 						lvItem.iItem = iItem;
 						lvItem.iSubItem = iSubItem++;
@@ -277,7 +277,7 @@ VOID EnumProcess(HWND hwnd)
 						memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
 						memset(&lvItem, 0, sizeof(LV_ITEM));
 						lvItem.mask = LVIF_TEXT;
-						_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("0x%08X"), (DWORD)hMod);
+						_stprintf_s(tcharBuff, BUFFLENGTHMAX*sizeof(TCHAR), TEXT("0x%08X"), (DWORD)hMod);
 						lvItem.pszText = tcharBuff;
 						lvItem.iItem = iItem;
 						lvItem.iSubItem = iSubItem++;
@@ -287,7 +287,7 @@ VOID EnumProcess(HWND hwnd)
 						memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
 						memset(&lvItem, 0, sizeof(LV_ITEM));
 						lvItem.mask = LVIF_TEXT;
-						_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("0x%08X"), imageSize);
+						_stprintf_s(tcharBuff, BUFFLENGTHMAX*sizeof(TCHAR), TEXT("0x%08X"), imageSize);
 						lvItem.pszText = tcharBuff;
 						lvItem.iItem = iItem;
 						lvItem.iSubItem = iSubItem++;
@@ -306,7 +306,7 @@ VOID EnumProcess(HWND hwnd)
 					memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
 					memset(&lvItem, 0, sizeof(LV_ITEM));
 					lvItem.mask = LVIF_TEXT;
-					_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("%s"), szProcessName_system);
+					_stprintf_s(tcharBuff, BUFFLENGTHMAX*sizeof(TCHAR), TEXT("%s"), szProcessName_system);
 					lvItem.pszText = tcharBuff;
 					lvItem.iItem = iItem;
 					lvItem.iSubItem = iSubItem++;
@@ -316,7 +316,7 @@ VOID EnumProcess(HWND hwnd)
 					memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
 					memset(&lvItem, 0, sizeof(LV_ITEM));
 					lvItem.mask = LVIF_TEXT;
-					_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("%d"), processID);
+					_stprintf_s(tcharBuff, BUFFLENGTHMAX*sizeof(TCHAR), TEXT("%d"), processID);
 					lvItem.pszText = tcharBuff;
 					lvItem.iItem = iItem;
 					lvItem.iSubItem = iSubItem++;
@@ -326,7 +326,7 @@ VOID EnumProcess(HWND hwnd)
 					memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
 					memset(&lvItem, 0, sizeof(LV_ITEM));
 					lvItem.mask = LVIF_TEXT;
-					_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("0x%08X"), (DWORD)0);
+					_stprintf_s(tcharBuff, BUFFLENGTHMAX*sizeof(TCHAR), TEXT("0x%08X"), (DWORD)0);
 					lvItem.pszText = tcharBuff;
 					lvItem.iItem = iItem;
 					lvItem.iSubItem = iSubItem++;
@@ -336,7 +336,7 @@ VOID EnumProcess(HWND hwnd)
 					memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
 					memset(&lvItem, 0, sizeof(LV_ITEM));
 					lvItem.mask = LVIF_TEXT;
-					_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("0x%08X"), (DWORD)0);
+					_stprintf_s(tcharBuff, BUFFLENGTHMAX*sizeof(TCHAR), TEXT("0x%08X"), (DWORD)0);
 					lvItem.pszText = tcharBuff;
 					lvItem.iItem = iItem;
 					lvItem.iSubItem = iSubItem++;
@@ -463,7 +463,7 @@ VOID ShowModules(HWND hListModule, DWORD processId)
 						
 			memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
 			memset(&lvItem, 0, sizeof(LV_ITEM));
-			_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("%s"), szModName);
+			_stprintf_s(tcharBuff, BUFFLENGTHMAX*sizeof(TCHAR), TEXT("%s"), szModName);
 			lvItem.mask = LVIF_TEXT;
 			lvItem.iItem = iItem;
 			lvItem.iSubItem = iSubItem++;
@@ -472,7 +472,7 @@ VOID ShowModules(HWND hListModule, DWORD processId)
 
 			memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
 			memset(&lvItem, 0, sizeof(LV_ITEM));
-			_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("0x%08x"), (DWORD)hMods[i]);
+			_stprintf_s(tcharBuff, BUFFLENGTHMAX*sizeof(TCHAR), TEXT("0x%08x"), (DWORD)hMods[i]);
 			lvItem.mask = LVIF_TEXT;
 			lvItem.iItem = iItem;
 			lvItem.iSubItem = iSubItem++;
@@ -481,7 +481,7 @@ VOID ShowModules(HWND hListModule, DWORD processId)
 
 			memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
 			memset(&lvItem, 0, sizeof(LV_ITEM));
-			_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("0x%08x"), imageSize);
+			_stprintf_s(tcharBuff, BUFFLENGTHMAX*sizeof(TCHAR), TEXT("0x%08x"), imageSize);
 			lvItem.mask = LVIF_TEXT;
 			lvItem.iItem = iItem;
 			lvItem.iSubItem = iSubItem++;
