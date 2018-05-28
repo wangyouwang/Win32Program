@@ -11,14 +11,36 @@
 #define MAXMODULES  1024
 
 //全局变量 imageBase
-HINSTANCE hAppInstance;
+HINSTANCE hAppInstance = NULL;
+HWND hwndMainDlg = NULL;
+HWND hwndPeFileDlg = NULL;
+TCHAR peFileName[MAX_PATH]=TEXT("\0");
+BYTE* fileBuffer = NULL;
+DWORD inFileSize = 0;
+
+IMAGE_DOS_HEADER* pDosHeader = NULL;
+IMAGE_NT_HEADERS* pImageNtHeader = NULL;
+IMAGE_FILE_HEADER* pImageFileHeader = NULL;
+IMAGE_OPTIONAL_HEADER32* pImageOptionHeader32 = NULL;
+IMAGE_OPTIONAL_HEADER64* pImageOptionHeader64 = NULL;
+IMAGE_SECTION_HEADER* pImageSectionHeaders=NULL;
+// WORD dNumberOfSections = 0;  //  pImageFileHeader->NumberOfSections
+
+//函数声明 
 VOID InitProcessListView(HWND hwnd);
 VOID InitModuleListView(HWND hwnd);
+VOID InitSectionsListView(HWND hwnd);
 VOID EnumProcess(HWND hwnd);
 VOID EnumModules(HWND hListProcess, WPARAM wparam, LPARAM lparam);
 VOID ShowModules(HWND hListModule, DWORD processId);
 DWORD GetModuleSize(TCHAR* szModuleName);
+BOOL DlgGetPeFileName(HWND hwnd, TCHAR* fileName, DWORD NameBuffSize);
 BOOL CALLBACK DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+BOOL CALLBACK DialogProc_PeFile(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+BOOL CALLBACK DialogProc_Sections(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+void destroyPeFileStruct();
+BOOL initPeFileStruct();
+
 // 入口函数，回调函数::C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\include\winbase.h
 int CALLBACK WinMain( __in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance, 
 				__in LPSTR lpCmdLine, __in int nShowCmd )
@@ -26,7 +48,7 @@ int CALLBACK WinMain( __in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance
 	//保存全局变量  imageBase
 	hAppInstance = hInstance;
 
-#if 1  // VC6 need 
+#if 1  // ListControl need 
 	INITCOMMONCONTROLSEX icex;
 	icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
 	icex.dwICC = ICC_WIN95_CLASSES;
@@ -45,16 +67,16 @@ BOOL CALLBACK DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	NMHDR* nmhdr = NULL;
 	HICON hicon = NULL;
 	BOOL nRet = FALSE;
+	
 	switch(uMsg)
 	{
 	case WM_DESTROY:
 		dbgPrintf(TEXT("WM_DESTROY: wParam=%x lParam=%x\n"),wParam, lParam);
-		PostQuitMessage(0);
 		nRet = TRUE;
 		break;
 	case WM_CLOSE:  // 右上角的x
 		dbgPrintf(TEXT("WM_CLOSE: wParam=%x lParam=%x\n"),wParam, lParam);
-		PostQuitMessage(0);
+		DestroyWindow(hwnd);
 		nRet = TRUE;
 		break;
 	case WM_NOTIFY:
@@ -71,6 +93,7 @@ BOOL CALLBACK DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		break;
 	case WM_INITDIALOG:   //WM_CREATE:
+		hwndMainDlg = hwnd;
 		hicon = LoadIcon(hAppInstance, MAKEINTRESOURCE(IDI_ICON_XPS) );
 		//设置图标
 		SendMessage(hwnd, WM_SETICON, ICON_BIG, (DWORD)hicon);
@@ -87,6 +110,14 @@ BOOL CALLBACK DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		{
 		case IDC_BUTTON_OPENPE:
 			dbgPrintf(TEXT("WM_COMMAN: IDC_BUTTON_OPENPE wParam=%x lParam=%x\n"),wParam, lParam);
+			// GetOpenFileName 得到文件路径
+			if(TRUE == DlgGetPeFileName(hwnd, peFileName, MAX_PATH-1))
+			{
+				dbgPrintf(TEXT("select filepath: %s\n"), peFileName);
+			// 显示对话窗，输出pe头信息
+				//创建窗口
+				DialogBox(hAppInstance, MAKEINTRESOURCE(IDD_DIALOG_FILE), NULL, DialogProc_PeFile);
+			}
 			nRet = TRUE;
 			break;
 		case IDC_BUTTON_PROTECT:
@@ -103,7 +134,7 @@ BOOL CALLBACK DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			break;
 		case IDC_BUTTON_EXIT:
 			dbgPrintf(TEXT("WM_COMMAN: IDC_BUTTON_EXIT wParam=%x lParam=%x\n"),wParam, lParam);
-			PostQuitMessage(0);
+			DestroyWindow(hwnd);
 			nRet = TRUE;
 			break;
 		default:
@@ -135,12 +166,12 @@ BOOL CALLBACK DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return nRet; 
 }
 
-
 VOID InitProcessListView(HWND hwnd)
 {
 	LV_COLUMN lv;
 	HWND hListProcess;
-
+	//DWORD ThreadId;
+	//HANDLE hThread;
 	//初始化
 	memset(&lv, 0, sizeof(lv));
 	//获取IDC_LIST_PROCESS句柄
@@ -177,9 +208,10 @@ VOID InitProcessListView(HWND hwnd)
 	lv.iSubItem = 3;
 	SendMessage(hListProcess, LVM_INSERTCOLUMN, 3, (DWORD)&lv);
 
+	//hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)EnumProcess, hListProcess, 0, &ThreadId);
+	//WaitForSingleObject(hThread, INFINITE);
 	EnumProcess(hListProcess);
 }
-
 
 VOID InitModuleListView(HWND hwnd)
 {
@@ -306,7 +338,7 @@ VOID EnumProcess(HWND hwnd)
 					memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
 					memset(&lvItem, 0, sizeof(LV_ITEM));
 					lvItem.mask = LVIF_TEXT;
-					_stprintf_s(tcharBuff, BUFFLENGTHMAX*sizeof(TCHAR), TEXT("%s"), szProcessName_system);
+					_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("%s"), szProcessName_system);
 					lvItem.pszText = tcharBuff;
 					lvItem.iItem = iItem;
 					lvItem.iSubItem = iSubItem++;
@@ -316,7 +348,7 @@ VOID EnumProcess(HWND hwnd)
 					memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
 					memset(&lvItem, 0, sizeof(LV_ITEM));
 					lvItem.mask = LVIF_TEXT;
-					_stprintf_s(tcharBuff, BUFFLENGTHMAX*sizeof(TCHAR), TEXT("%d"), processID);
+					_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("%d"), processID);
 					lvItem.pszText = tcharBuff;
 					lvItem.iItem = iItem;
 					lvItem.iSubItem = iSubItem++;
@@ -326,7 +358,7 @@ VOID EnumProcess(HWND hwnd)
 					memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
 					memset(&lvItem, 0, sizeof(LV_ITEM));
 					lvItem.mask = LVIF_TEXT;
-					_stprintf_s(tcharBuff, BUFFLENGTHMAX*sizeof(TCHAR), TEXT("0x%08X"), (DWORD)0);
+					_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("0x%08X"), (DWORD)0);
 					lvItem.pszText = tcharBuff;
 					lvItem.iItem = iItem;
 					lvItem.iSubItem = iSubItem++;
@@ -336,7 +368,7 @@ VOID EnumProcess(HWND hwnd)
 					memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
 					memset(&lvItem, 0, sizeof(LV_ITEM));
 					lvItem.mask = LVIF_TEXT;
-					_stprintf_s(tcharBuff, BUFFLENGTHMAX*sizeof(TCHAR), TEXT("0x%08X"), (DWORD)0);
+					_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("0x%08X"), (DWORD)0);
 					lvItem.pszText = tcharBuff;
 					lvItem.iItem = iItem;
 					lvItem.iSubItem = iSubItem++;
@@ -491,4 +523,444 @@ VOID ShowModules(HWND hListModule, DWORD processId)
 	}
 	CloseHandle(hProcess);
 	hProcess = NULL;
+}
+
+BOOL DlgGetPeFileName(HWND hwnd, TCHAR* fileName, DWORD NameBuffSize)
+{
+	BOOL bRet = FALSE;
+	OPENFILENAME ofn; 
+	memset(&ofn, 0, sizeof(OPENFILENAME));
+
+
+	ofn.hwndOwner = hwnd;
+	ofn.lStructSize = sizeof(OPENFILENAME);
+	ofn.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST; 
+	ofn.lpstrFilter = TEXT("*.exe;*.dll;*.csr;*.drv;*.sys");
+	ofn.lpstrFile = fileName;
+	ofn.nMaxFile = NameBuffSize;
+	bRet = GetOpenFileName(&ofn);
+	if(bRet != FALSE)
+		bRet = TRUE;
+
+	return bRet;
+}
+
+// DIALOG_FILE 消息回调函数  处理过的消息返回TRUE 否则返回FALSE
+BOOL CALLBACK DialogProc_PeFile(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	BOOL nRet = FALSE;
+	HWND hEditWnd = NULL;
+	TCHAR tcharBuff[BUFFLENGTHMAX];
+	switch(uMsg)
+	{
+	case WM_DESTROY:
+		dbgPrintf(TEXT("WM_DESTROY: wParam=%x lParam=%x\n"),wParam, lParam);
+		destroyPeFileStruct();
+		nRet = TRUE;
+		break;
+	case WM_CLOSE:  // 右上角的x
+		dbgPrintf(TEXT("WM_CLOSE: wParam=%x lParam=%x\n"),wParam, lParam);
+		DestroyWindow(hwnd);
+		nRet = TRUE;
+		break;
+	case WM_INITDIALOG:
+		hwndPeFileDlg = hwnd;
+		// init PE file buffer and image buffer 
+		if(TRUE == initPeFileStruct())
+		{
+#if 1
+			if(pImageOptionHeader32 != NULL)
+			{
+				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
+					TEXT("0x%08x"), pImageOptionHeader32->AddressOfEntryPoint);
+				hEditWnd = GetDlgItem(hwnd, IDC_EDIT1);
+				Edit_SetText(hEditWnd, tcharBuff);
+
+				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
+					TEXT("0x%08x"), pImageOptionHeader32->ImageBase);
+				hEditWnd = GetDlgItem(hwnd, IDC_EDIT2);
+				Edit_SetText(hEditWnd, tcharBuff);
+
+				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
+					TEXT("0x%08x"), pImageOptionHeader32->SizeOfImage);
+				hEditWnd = GetDlgItem(hwnd, IDC_EDIT3);
+				Edit_SetText(hEditWnd, tcharBuff);
+
+				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
+					TEXT("0x%08x"), pImageOptionHeader32->BaseOfCode);
+				hEditWnd = GetDlgItem(hwnd, IDC_EDIT4);
+				Edit_SetText(hEditWnd, tcharBuff);
+
+				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
+					TEXT("0x%08x"), pImageOptionHeader32->BaseOfData);
+				hEditWnd = GetDlgItem(hwnd, IDC_EDIT5);
+				Edit_SetText(hEditWnd, tcharBuff);
+
+				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
+					TEXT("0x%08x"), pImageOptionHeader32->SectionAlignment);
+				hEditWnd = GetDlgItem(hwnd, IDC_EDIT6);
+				Edit_SetText(hEditWnd, tcharBuff);
+
+				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
+					TEXT("0x%08x"), pImageOptionHeader32->FileAlignment);
+				hEditWnd = GetDlgItem(hwnd, IDC_EDIT7);
+				Edit_SetText(hEditWnd, tcharBuff);
+
+				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
+					TEXT("0x%08x"), pImageOptionHeader32->LoaderFlags);
+				hEditWnd = GetDlgItem(hwnd, IDC_EDIT8);
+				Edit_SetText(hEditWnd, tcharBuff);
+
+				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
+					TEXT("0x%08x"), pImageOptionHeader32->Subsystem);
+				hEditWnd = GetDlgItem(hwnd, IDC_EDIT9);
+				Edit_SetText(hEditWnd, tcharBuff);
+
+				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
+					TEXT("0x%08x"), pImageFileHeader->NumberOfSections);
+				hEditWnd = GetDlgItem(hwnd, IDC_EDIT10);
+				Edit_SetText(hEditWnd, tcharBuff);
+
+				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
+					TEXT("0x%08x"), pImageFileHeader->TimeDateStamp);
+				hEditWnd = GetDlgItem(hwnd, IDC_EDIT11);
+				Edit_SetText(hEditWnd, tcharBuff);
+
+				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
+					TEXT("0x%08x"), pImageOptionHeader32->SizeOfHeaders);
+				hEditWnd = GetDlgItem(hwnd, IDC_EDIT12);
+				Edit_SetText(hEditWnd, tcharBuff);
+
+				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
+					TEXT("0x%04x"), pImageFileHeader->Characteristics);
+				hEditWnd = GetDlgItem(hwnd, IDC_EDIT13);
+				Edit_SetText(hEditWnd, tcharBuff);
+
+				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
+					TEXT("0x%08x"), pImageOptionHeader32->CheckSum);
+				hEditWnd = GetDlgItem(hwnd, IDC_EDIT14);
+				Edit_SetText(hEditWnd, tcharBuff);
+
+				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
+					TEXT("0x%04x"), pImageFileHeader->SizeOfOptionalHeader);
+				hEditWnd = GetDlgItem(hwnd, IDC_EDIT15);
+				Edit_SetText(hEditWnd, tcharBuff);
+
+				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
+					TEXT("0x%04x"), pImageOptionHeader32->NumberOfRvaAndSizes);
+				hEditWnd = GetDlgItem(hwnd, IDC_EDIT16);
+				Edit_SetText(hEditWnd, tcharBuff);
+			}
+			else if(pImageOptionHeader64 != NULL)
+			{
+				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
+					TEXT("0x%08x"), pImageOptionHeader64->AddressOfEntryPoint);
+				hEditWnd = GetDlgItem(hwnd, IDC_EDIT1);
+				Edit_SetText(hEditWnd, tcharBuff);
+
+				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
+					TEXT("0x%I64x"), pImageOptionHeader64->ImageBase);
+				hEditWnd = GetDlgItem(hwnd, IDC_EDIT2);
+				Edit_SetText(hEditWnd, tcharBuff);
+
+				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
+					TEXT("0x%08x"), pImageOptionHeader64->SizeOfImage);
+				hEditWnd = GetDlgItem(hwnd, IDC_EDIT3);
+				Edit_SetText(hEditWnd, tcharBuff);
+
+				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
+					TEXT("0x%08x"), pImageOptionHeader64->BaseOfCode);
+				hEditWnd = GetDlgItem(hwnd, IDC_EDIT4);
+				Edit_SetText(hEditWnd, tcharBuff);
+
+				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
+					TEXT("%x"), 0);
+				hEditWnd = GetDlgItem(hwnd, IDC_EDIT5);
+				Edit_SetText(hEditWnd, tcharBuff);
+
+				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
+					TEXT("0x%08x"), pImageOptionHeader64->SectionAlignment);
+				hEditWnd = GetDlgItem(hwnd, IDC_EDIT6);
+				Edit_SetText(hEditWnd, tcharBuff);
+
+				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
+					TEXT("0x%08x"), pImageOptionHeader64->FileAlignment);
+				hEditWnd = GetDlgItem(hwnd, IDC_EDIT7);
+				Edit_SetText(hEditWnd, tcharBuff);
+
+				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
+					TEXT("0x%08x"), pImageOptionHeader64->LoaderFlags);
+				hEditWnd = GetDlgItem(hwnd, IDC_EDIT8);
+				Edit_SetText(hEditWnd, tcharBuff);
+
+				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
+					TEXT("0x%08x"), pImageOptionHeader64->Subsystem);
+				hEditWnd = GetDlgItem(hwnd, IDC_EDIT9);
+				Edit_SetText(hEditWnd, tcharBuff);
+
+				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
+					TEXT("0x%08x"), pImageFileHeader->NumberOfSections);
+				hEditWnd = GetDlgItem(hwnd, IDC_EDIT10);
+				Edit_SetText(hEditWnd, tcharBuff);
+
+				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
+					TEXT("0x%08x"), pImageFileHeader->TimeDateStamp);
+				hEditWnd = GetDlgItem(hwnd, IDC_EDIT11);
+				Edit_SetText(hEditWnd, tcharBuff);
+
+				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
+					TEXT("0x%08x"), pImageOptionHeader64->SizeOfHeaders);
+				hEditWnd = GetDlgItem(hwnd, IDC_EDIT12);
+				Edit_SetText(hEditWnd, tcharBuff);
+
+				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
+					TEXT("0x%04x"), pImageFileHeader->Characteristics);
+				hEditWnd = GetDlgItem(hwnd, IDC_EDIT13);
+				Edit_SetText(hEditWnd, tcharBuff);
+
+				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
+					TEXT("0x%08x"), pImageOptionHeader64->CheckSum);
+				hEditWnd = GetDlgItem(hwnd, IDC_EDIT14);
+				Edit_SetText(hEditWnd, tcharBuff);
+
+				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
+					TEXT("0x%04x"), pImageFileHeader->SizeOfOptionalHeader);
+				hEditWnd = GetDlgItem(hwnd, IDC_EDIT15);
+				Edit_SetText(hEditWnd, tcharBuff);
+
+				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
+					TEXT("0x%04x"), pImageOptionHeader64->NumberOfRvaAndSizes);
+				hEditWnd = GetDlgItem(hwnd, IDC_EDIT16);
+				Edit_SetText(hEditWnd, tcharBuff);
+			}
+#endif
+		}
+		nRet = TRUE;
+		break;
+	case WM_COMMAND:
+		switch( LOWORD(wParam) )
+		{
+		case IDC_BUTTON_PEDLG_CLOSE:
+			DestroyWindow(hwnd);
+			nRet = TRUE;
+			break;
+		case IDC_BUTTON_SECTIONS:
+			DialogBox(hAppInstance, MAKEINTRESOURCE(IDD_DIALOG_SECTIONS), NULL, DialogProc_Sections);
+			nRet = TRUE;
+			break;
+		case IDC_BUTTON_DIRECTORY:
+			nRet = TRUE;
+			break;
+		default:
+			break;
+		}
+		break;
+	default:
+		break;
+	}
+
+	return nRet;
+}
+
+
+BOOL initPeFileStruct()
+{
+	FILE* inFile = NULL;
+	errno_t err = 0;
+	DWORD nRet;
+	BOOL bRet = FALSE;
+	// 打开文件 获取大小 申请空间 加载到内存
+#if 1
+	{
+		err = _tfopen_s(&inFile, peFileName, TEXT("rb"));
+		if( err!=0 )
+		{
+			dbgPrintf(TEXT("err = %d\n"),err);
+			return bRet;
+		}
+		assert(inFile!=NULL);
+		err = fseek(inFile, 0, SEEK_END); assert(err==0);
+		inFileSize = ftell(inFile); assert(inFileSize!=0);
+
+		fileBuffer = new BYTE[inFileSize];assert(fileBuffer!=NULL);	
+		err = fseek(inFile, 0, SEEK_SET);assert(err==0);
+		nRet = fread(fileBuffer, sizeof(BYTE), inFileSize, inFile);
+		if(nRet != inFileSize)
+		{
+			dbgPrintf(TEXT("read file error!\n"));
+			return bRet;
+		}
+		else
+		{
+			dbgPrintf(TEXT("read file ok! read 0x%x bytes"), inFileSize);
+		}
+		fclose(inFile);
+		inFile = NULL;
+	}
+#endif
+
+	//初始化几个头部指针  pDosHeader pImageNtHeader pImageFileHeader ? pImageOptionHeader32 : pImageOptionHeader64
+	assert(inFileSize > sizeof(IMAGE_DOS_HEADER) );
+	pDosHeader = (IMAGE_DOS_HEADER*)fileBuffer;
+	pImageNtHeader =  (IMAGE_NT_HEADERS*)(fileBuffer + pDosHeader->e_lfanew);
+	pImageFileHeader = &(pImageNtHeader->FileHeader);
+	if( pImageFileHeader->SizeOfOptionalHeader == sizeof(IMAGE_OPTIONAL_HEADER32) )
+	{
+		pImageOptionHeader32 = &(pImageNtHeader->OptionalHeader);
+		dbgPrintf(TEXT("read file PE in x32 format!\n"));
+		bRet = TRUE;
+	}
+	else if( pImageFileHeader->SizeOfOptionalHeader == sizeof(IMAGE_OPTIONAL_HEADER64) )
+	{
+		pImageOptionHeader64 = (IMAGE_OPTIONAL_HEADER64*)&(pImageNtHeader->OptionalHeader);
+		dbgPrintf(TEXT("read file PE in x64 format!\n"));
+		bRet = TRUE;
+	}
+	else
+	{// IMAGE_FIRST_SECTION doesn't need 32/64 versions since the file header is the same either way.
+		pImageSectionHeaders = IMAGE_FIRST_SECTION(pImageNtHeader);
+		dbgPrintf(TEXT("read file wasn't PE format!\n"));
+		return bRet;
+	}
+	
+	return bRet;
+}
+
+void destroyPeFileStruct()
+{
+	inFileSize = 0;
+	if(fileBuffer)
+	{
+		delete[] fileBuffer;
+		fileBuffer = NULL;
+	}
+	pDosHeader = NULL;
+	pImageNtHeader =  NULL;
+	pImageFileHeader = NULL;
+	pImageOptionHeader32 = NULL;
+	pImageOptionHeader64 = NULL;
+}
+
+//
+// DIALOG_SECTIONS 消息回调函数  处理过的消息返回TRUE 否则返回FALSE
+BOOL CALLBACK DialogProc_Sections(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	BOOL nRet = FALSE;
+	switch(uMsg)
+	{
+	case WM_DESTROY:
+		dbgPrintf(TEXT("WM_DESTROY: wParam=%x lParam=%x\n"),wParam, lParam);
+		nRet = TRUE;
+		break;
+	case WM_CLOSE:  // 右上角的x
+		dbgPrintf(TEXT("WM_CLOSE: wParam=%x lParam=%x\n"),wParam, lParam);
+		DestroyWindow(hwnd);
+		nRet = TRUE;
+		break;
+	case WM_INITDIALOG:
+		InitSectionsListView(hwnd);
+		break;
+	case WM_COMMAND:
+		switch( LOWORD(wParam) )
+		{
+		case IDC_BUTTON_SECTIONS_EXIT:
+			DestroyWindow(hwnd);
+			nRet = TRUE;
+			break;
+		default:
+			break;
+		}
+		break;
+	default:
+		break;
+	}
+
+	return nRet;
+}
+
+VOID InitSectionsListView(HWND hwnd)
+{
+	LV_COLUMN lv;
+	//LV_ITEM lvItem;	
+	//TCHAR tcharBuff[BUFFLENGTHMAX];
+	BYTE Name[IMAGE_SIZEOF_SHORT_NAME+1];
+	HWND hListSections;
+	TCHAR listSectionsNames[6][MAX_PATH]={
+		TEXT("名称"),TEXT("虚拟大小"),TEXT("虚拟偏移"),
+		TEXT("RAW大小"),TEXT("RAW偏移"),TEXT("特征值") };
+	DWORD iSubitem = 0;
+	WORD dNumberOfSections = pImageFileHeader->NumberOfSections;
+	//初始化
+	memset(Name, 0, IMAGE_SIZEOF_SHORT_NAME+1);
+	memset(&lv, 0, sizeof(lv));
+	//获取IDC_LIST_PROCESS句柄
+	hListSections = GetDlgItem(hwnd, IDC_LIST_SECTIONS);
+	//设置整行选中
+	SendMessage(hListSections, LVM_SETEXTENDEDLISTVIEWSTYLE, LVS_EX_FULLROWSELECT, LVS_EX_FULLROWSELECT);
+
+	for(int i=0; i<6; i++)
+	{
+		lv.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
+		lv.pszText = listSectionsNames[i];
+		lv.cx = 90;
+		lv.iSubItem = i;	
+		SendMessage(hListSections, LVM_INSERTCOLUMN, i, (DWORD)&lv); 
+		// ListView_InsertColumn(hListSections, 0, (DWORD)&lv)
+	}
+
+	//显示 Sections 到 hListSections
+// 	for(int i=0; i<dNumberOfSections; i++)
+// 	{
+// 		int j = 0; //TEXT("名称"),
+// 		memset(tcharBuff, 0, sizeof(tcharBuff));
+// 		memset(&lvItem, 0, sizeof(lvItem));
+// 		memcpy_s(Name, sizeof(Name), pImageSectionHeaders[i].Name, IMAGE_SIZEOF_SHORT_NAME);
+// 		CharToTchar((const char*)Name, tcharBuff);
+// 		lvItem.mask = LVIF_TEXT;
+// 		lvItem.pszText = tcharBuff;
+// 		lvItem.iItem = i;
+// 		lvItem.iSubItem = j;
+// 		ListView_InsertItem(hListSections, &lvItem);
+// 
+// 		j++; // TEXT("虚拟大小"),
+// 		_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("%x"), pImageSectionHeaders[i].Misc.VirtualSize);
+// 		lvItem.mask = LVIF_TEXT;
+// 		lvItem.pszText = tcharBuff;
+// 		lvItem.iItem = i;
+// 		lvItem.iSubItem = j;
+// 		ListView_SetItem(hListSections, &lvItem);
+// 
+// 		j++; // TEXT("虚拟偏移"),
+// 		_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("0x%08x"), pImageSectionHeaders[i].VirtualAddress);
+// 		lvItem.mask = LVIF_TEXT;
+// 		lvItem.pszText = tcharBuff;
+// 		lvItem.iItem = i;
+// 		lvItem.iSubItem = j;
+// 		ListView_SetItem(hListSections, &lvItem);
+// 		
+// 
+// 		j++; // TEXT("RAW大小"),
+// 		_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("0x%08x"), pImageSectionHeaders[i].SizeOfRawData);
+// 		lvItem.mask = LVIF_TEXT;
+// 		lvItem.pszText = tcharBuff;
+// 		lvItem.iItem = i;
+// 		lvItem.iSubItem = j;
+// 		ListView_SetItem(hListSections, &lvItem);
+// 
+// 		j++; // TEXT("RAW偏移"),
+// 		_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("0x%08x"), pImageSectionHeaders[i].PointerToRawData);
+// 		lvItem.mask = LVIF_TEXT;
+// 		lvItem.pszText = tcharBuff;
+// 		lvItem.iItem = i;
+// 		lvItem.iSubItem = j;
+// 		ListView_SetItem(hListSections, &lvItem);
+// 
+// 		j++; // TEXT("特征值")
+// 		_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("0x%08x"), pImageSectionHeaders[i].Characteristics);
+// 		lvItem.mask = LVIF_TEXT;
+// 		lvItem.pszText = tcharBuff;
+// 		lvItem.iItem = i;
+// 		lvItem.iSubItem = j;
+// 		ListView_SetItem(hListSections, &lvItem);
+// 	}
 }
