@@ -289,7 +289,7 @@ VOID EnumProcess(HWND hwnd)
 						memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
 						memset(&lvItem, 0, sizeof(LV_ITEM));
 						lvItem.mask = LVIF_TEXT;
-						_stprintf_s(tcharBuff, BUFFLENGTHMAX*sizeof(TCHAR), TEXT("%s"), szModName);
+						_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("%s"), szModName);
 						lvItem.pszText = tcharBuff;
 						lvItem.iItem = iItem;
 						lvItem.iSubItem = iSubItem++;
@@ -299,7 +299,7 @@ VOID EnumProcess(HWND hwnd)
 						memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
 						memset(&lvItem, 0, sizeof(LV_ITEM));
 						lvItem.mask = LVIF_TEXT;
-						_stprintf_s(tcharBuff, BUFFLENGTHMAX*sizeof(TCHAR), TEXT("%d"), processID);
+						_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("%d"), processID);
 						lvItem.pszText = tcharBuff;
 						lvItem.iItem = iItem;
 						lvItem.iSubItem = iSubItem++;
@@ -309,7 +309,7 @@ VOID EnumProcess(HWND hwnd)
 						memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
 						memset(&lvItem, 0, sizeof(LV_ITEM));
 						lvItem.mask = LVIF_TEXT;
-						_stprintf_s(tcharBuff, BUFFLENGTHMAX*sizeof(TCHAR), TEXT("0x%08X"), (DWORD)hMod);
+						_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("0x%08X"), (DWORD)hMod);
 						lvItem.pszText = tcharBuff;
 						lvItem.iItem = iItem;
 						lvItem.iSubItem = iSubItem++;
@@ -319,7 +319,7 @@ VOID EnumProcess(HWND hwnd)
 						memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
 						memset(&lvItem, 0, sizeof(LV_ITEM));
 						lvItem.mask = LVIF_TEXT;
-						_stprintf_s(tcharBuff, BUFFLENGTHMAX*sizeof(TCHAR), TEXT("0x%08X"), imageSize);
+						_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("0x%08X"), imageSize);
 						lvItem.pszText = tcharBuff;
 						lvItem.iItem = iItem;
 						lvItem.iSubItem = iSubItem++;
@@ -495,7 +495,7 @@ VOID ShowModules(HWND hListModule, DWORD processId)
 						
 			memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
 			memset(&lvItem, 0, sizeof(LV_ITEM));
-			_stprintf_s(tcharBuff, BUFFLENGTHMAX*sizeof(TCHAR), TEXT("%s"), szModName);
+			_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("%s"), szModName);
 			lvItem.mask = LVIF_TEXT;
 			lvItem.iItem = iItem;
 			lvItem.iSubItem = iSubItem++;
@@ -504,7 +504,7 @@ VOID ShowModules(HWND hListModule, DWORD processId)
 
 			memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
 			memset(&lvItem, 0, sizeof(LV_ITEM));
-			_stprintf_s(tcharBuff, BUFFLENGTHMAX*sizeof(TCHAR), TEXT("0x%08x"), (DWORD)hMods[i]);
+			_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("0x%08X"), (DWORD)hMods[i]);
 			lvItem.mask = LVIF_TEXT;
 			lvItem.iItem = iItem;
 			lvItem.iSubItem = iSubItem++;
@@ -513,7 +513,7 @@ VOID ShowModules(HWND hListModule, DWORD processId)
 
 			memset(tcharBuff, 0, sizeof(TCHAR) * BUFFLENGTHMAX);
 			memset(&lvItem, 0, sizeof(LV_ITEM));
-			_stprintf_s(tcharBuff, BUFFLENGTHMAX*sizeof(TCHAR), TEXT("0x%08x"), imageSize);
+			_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("0x%08X"), imageSize);
 			lvItem.mask = LVIF_TEXT;
 			lvItem.iItem = iItem;
 			lvItem.iSubItem = iSubItem++;
@@ -571,165 +571,165 @@ BOOL CALLBACK DialogProc_PeFile(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 #if 1
 			if(pImageOptionHeader32 != NULL)
 			{
-				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
-					TEXT("0x%08x"), pImageOptionHeader32->AddressOfEntryPoint);
+				_stprintf_s(tcharBuff, BUFFLENGTHMAX, 
+					TEXT("0x%08X"), pImageOptionHeader32->AddressOfEntryPoint);
 				hEditWnd = GetDlgItem(hwnd, IDC_EDIT1);
 				Edit_SetText(hEditWnd, tcharBuff);
 
-				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
-					TEXT("0x%08x"), pImageOptionHeader32->ImageBase);
+				_stprintf_s(tcharBuff, BUFFLENGTHMAX, 
+					TEXT("0x%08X"), pImageOptionHeader32->ImageBase);
 				hEditWnd = GetDlgItem(hwnd, IDC_EDIT2);
 				Edit_SetText(hEditWnd, tcharBuff);
 
-				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
-					TEXT("0x%08x"), pImageOptionHeader32->SizeOfImage);
+				_stprintf_s(tcharBuff, BUFFLENGTHMAX, 
+					TEXT("0x%08X"), pImageOptionHeader32->SizeOfImage);
 				hEditWnd = GetDlgItem(hwnd, IDC_EDIT3);
 				Edit_SetText(hEditWnd, tcharBuff);
 
-				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
-					TEXT("0x%08x"), pImageOptionHeader32->BaseOfCode);
+				_stprintf_s(tcharBuff, BUFFLENGTHMAX, 
+					TEXT("0x%08X"), pImageOptionHeader32->BaseOfCode);
 				hEditWnd = GetDlgItem(hwnd, IDC_EDIT4);
 				Edit_SetText(hEditWnd, tcharBuff);
 
-				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
-					TEXT("0x%08x"), pImageOptionHeader32->BaseOfData);
+				_stprintf_s(tcharBuff, BUFFLENGTHMAX, 
+					TEXT("0x%08X"), pImageOptionHeader32->BaseOfData);
 				hEditWnd = GetDlgItem(hwnd, IDC_EDIT5);
 				Edit_SetText(hEditWnd, tcharBuff);
 
-				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
-					TEXT("0x%08x"), pImageOptionHeader32->SectionAlignment);
+				_stprintf_s(tcharBuff, BUFFLENGTHMAX, 
+					TEXT("0x%08X"), pImageOptionHeader32->SectionAlignment);
 				hEditWnd = GetDlgItem(hwnd, IDC_EDIT6);
 				Edit_SetText(hEditWnd, tcharBuff);
 
-				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
-					TEXT("0x%08x"), pImageOptionHeader32->FileAlignment);
+				_stprintf_s(tcharBuff, BUFFLENGTHMAX, 
+					TEXT("0x%08X"), pImageOptionHeader32->FileAlignment);
 				hEditWnd = GetDlgItem(hwnd, IDC_EDIT7);
 				Edit_SetText(hEditWnd, tcharBuff);
 
-				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
-					TEXT("0x%08x"), pImageOptionHeader32->LoaderFlags);
+				_stprintf_s(tcharBuff, BUFFLENGTHMAX, 
+					TEXT("0x%08X"), pImageOptionHeader32->LoaderFlags);
 				hEditWnd = GetDlgItem(hwnd, IDC_EDIT8);
 				Edit_SetText(hEditWnd, tcharBuff);
 
-				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
-					TEXT("0x%08x"), pImageOptionHeader32->Subsystem);
+				_stprintf_s(tcharBuff, BUFFLENGTHMAX, 
+					TEXT("0x%08X"), pImageOptionHeader32->Subsystem);
 				hEditWnd = GetDlgItem(hwnd, IDC_EDIT9);
 				Edit_SetText(hEditWnd, tcharBuff);
 
-				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
-					TEXT("0x%08x"), pImageFileHeader->NumberOfSections);
+				_stprintf_s(tcharBuff, BUFFLENGTHMAX, 
+					TEXT("0x%08X"), pImageFileHeader->NumberOfSections);
 				hEditWnd = GetDlgItem(hwnd, IDC_EDIT10);
 				Edit_SetText(hEditWnd, tcharBuff);
 
-				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
-					TEXT("0x%08x"), pImageFileHeader->TimeDateStamp);
+				_stprintf_s(tcharBuff, BUFFLENGTHMAX, 
+					TEXT("0x%08X"), pImageFileHeader->TimeDateStamp);
 				hEditWnd = GetDlgItem(hwnd, IDC_EDIT11);
 				Edit_SetText(hEditWnd, tcharBuff);
 
-				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
-					TEXT("0x%08x"), pImageOptionHeader32->SizeOfHeaders);
+				_stprintf_s(tcharBuff, BUFFLENGTHMAX, 
+					TEXT("0x%08X"), pImageOptionHeader32->SizeOfHeaders);
 				hEditWnd = GetDlgItem(hwnd, IDC_EDIT12);
 				Edit_SetText(hEditWnd, tcharBuff);
 
-				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
-					TEXT("0x%04x"), pImageFileHeader->Characteristics);
+				_stprintf_s(tcharBuff, BUFFLENGTHMAX, 
+					TEXT("0x%04X"), pImageFileHeader->Characteristics);
 				hEditWnd = GetDlgItem(hwnd, IDC_EDIT13);
 				Edit_SetText(hEditWnd, tcharBuff);
 
-				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
-					TEXT("0x%08x"), pImageOptionHeader32->CheckSum);
+				_stprintf_s(tcharBuff, BUFFLENGTHMAX, 
+					TEXT("0x%08X"), pImageOptionHeader32->CheckSum);
 				hEditWnd = GetDlgItem(hwnd, IDC_EDIT14);
 				Edit_SetText(hEditWnd, tcharBuff);
 
-				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
-					TEXT("0x%04x"), pImageFileHeader->SizeOfOptionalHeader);
+				_stprintf_s(tcharBuff, BUFFLENGTHMAX, 
+					TEXT("0x%04X"), pImageFileHeader->SizeOfOptionalHeader);
 				hEditWnd = GetDlgItem(hwnd, IDC_EDIT15);
 				Edit_SetText(hEditWnd, tcharBuff);
 
-				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
-					TEXT("0x%04x"), pImageOptionHeader32->NumberOfRvaAndSizes);
+				_stprintf_s(tcharBuff, BUFFLENGTHMAX, 
+					TEXT("0x%04X"), pImageOptionHeader32->NumberOfRvaAndSizes);
 				hEditWnd = GetDlgItem(hwnd, IDC_EDIT16);
 				Edit_SetText(hEditWnd, tcharBuff);
 			}
 			else if(pImageOptionHeader64 != NULL)
 			{
-				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
-					TEXT("0x%08x"), pImageOptionHeader64->AddressOfEntryPoint);
+				_stprintf_s(tcharBuff, BUFFLENGTHMAX, 
+					TEXT("0x%08X"), pImageOptionHeader64->AddressOfEntryPoint);
 				hEditWnd = GetDlgItem(hwnd, IDC_EDIT1);
 				Edit_SetText(hEditWnd, tcharBuff);
 
-				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
+				_stprintf_s(tcharBuff, BUFFLENGTHMAX, 
 					TEXT("0x%I64x"), pImageOptionHeader64->ImageBase);
 				hEditWnd = GetDlgItem(hwnd, IDC_EDIT2);
 				Edit_SetText(hEditWnd, tcharBuff);
 
-				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
-					TEXT("0x%08x"), pImageOptionHeader64->SizeOfImage);
+				_stprintf_s(tcharBuff, BUFFLENGTHMAX, 
+					TEXT("0x%08X"), pImageOptionHeader64->SizeOfImage);
 				hEditWnd = GetDlgItem(hwnd, IDC_EDIT3);
 				Edit_SetText(hEditWnd, tcharBuff);
 
-				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
-					TEXT("0x%08x"), pImageOptionHeader64->BaseOfCode);
+				_stprintf_s(tcharBuff, BUFFLENGTHMAX, 
+					TEXT("0x%08X"), pImageOptionHeader64->BaseOfCode);
 				hEditWnd = GetDlgItem(hwnd, IDC_EDIT4);
 				Edit_SetText(hEditWnd, tcharBuff);
 
-				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
+				_stprintf_s(tcharBuff, BUFFLENGTHMAX, 
 					TEXT("%x"), 0);
 				hEditWnd = GetDlgItem(hwnd, IDC_EDIT5);
 				Edit_SetText(hEditWnd, tcharBuff);
 
-				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
-					TEXT("0x%08x"), pImageOptionHeader64->SectionAlignment);
+				_stprintf_s(tcharBuff, BUFFLENGTHMAX, 
+					TEXT("0x%08X"), pImageOptionHeader64->SectionAlignment);
 				hEditWnd = GetDlgItem(hwnd, IDC_EDIT6);
 				Edit_SetText(hEditWnd, tcharBuff);
 
-				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
-					TEXT("0x%08x"), pImageOptionHeader64->FileAlignment);
+				_stprintf_s(tcharBuff, BUFFLENGTHMAX, 
+					TEXT("0x%08X"), pImageOptionHeader64->FileAlignment);
 				hEditWnd = GetDlgItem(hwnd, IDC_EDIT7);
 				Edit_SetText(hEditWnd, tcharBuff);
 
-				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
-					TEXT("0x%08x"), pImageOptionHeader64->LoaderFlags);
+				_stprintf_s(tcharBuff, BUFFLENGTHMAX, 
+					TEXT("0x%08X"), pImageOptionHeader64->LoaderFlags);
 				hEditWnd = GetDlgItem(hwnd, IDC_EDIT8);
 				Edit_SetText(hEditWnd, tcharBuff);
 
-				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
-					TEXT("0x%08x"), pImageOptionHeader64->Subsystem);
+				_stprintf_s(tcharBuff, BUFFLENGTHMAX, 
+					TEXT("0x%08X"), pImageOptionHeader64->Subsystem);
 				hEditWnd = GetDlgItem(hwnd, IDC_EDIT9);
 				Edit_SetText(hEditWnd, tcharBuff);
 
-				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
-					TEXT("0x%08x"), pImageFileHeader->NumberOfSections);
+				_stprintf_s(tcharBuff, BUFFLENGTHMAX, 
+					TEXT("0x%08X"), pImageFileHeader->NumberOfSections);
 				hEditWnd = GetDlgItem(hwnd, IDC_EDIT10);
 				Edit_SetText(hEditWnd, tcharBuff);
 
-				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
-					TEXT("0x%08x"), pImageFileHeader->TimeDateStamp);
+				_stprintf_s(tcharBuff, BUFFLENGTHMAX, 
+					TEXT("0x%08X"), pImageFileHeader->TimeDateStamp);
 				hEditWnd = GetDlgItem(hwnd, IDC_EDIT11);
 				Edit_SetText(hEditWnd, tcharBuff);
 
-				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
-					TEXT("0x%08x"), pImageOptionHeader64->SizeOfHeaders);
+				_stprintf_s(tcharBuff, BUFFLENGTHMAX, 
+					TEXT("0x%08X"), pImageOptionHeader64->SizeOfHeaders);
 				hEditWnd = GetDlgItem(hwnd, IDC_EDIT12);
 				Edit_SetText(hEditWnd, tcharBuff);
 
-				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
-					TEXT("0x%04x"), pImageFileHeader->Characteristics);
+				_stprintf_s(tcharBuff, BUFFLENGTHMAX, 
+					TEXT("0x%04X"), pImageFileHeader->Characteristics);
 				hEditWnd = GetDlgItem(hwnd, IDC_EDIT13);
 				Edit_SetText(hEditWnd, tcharBuff);
 
-				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
-					TEXT("0x%08x"), pImageOptionHeader64->CheckSum);
+				_stprintf_s(tcharBuff, BUFFLENGTHMAX, 
+					TEXT("0x%08X"), pImageOptionHeader64->CheckSum);
 				hEditWnd = GetDlgItem(hwnd, IDC_EDIT14);
 				Edit_SetText(hEditWnd, tcharBuff);
 
-				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
-					TEXT("0x%04x"), pImageFileHeader->SizeOfOptionalHeader);
+				_stprintf_s(tcharBuff, BUFFLENGTHMAX, 
+					TEXT("0x%04X"), pImageFileHeader->SizeOfOptionalHeader);
 				hEditWnd = GetDlgItem(hwnd, IDC_EDIT15);
 				Edit_SetText(hEditWnd, tcharBuff);
 
-				_stprintf_s(tcharBuff, sizeof(TCHAR)*BUFFLENGTHMAX, 
-					TEXT("0x%04x"), pImageOptionHeader64->NumberOfRvaAndSizes);
+				_stprintf_s(tcharBuff, BUFFLENGTHMAX, 
+					TEXT("0x%04X"), pImageOptionHeader64->NumberOfRvaAndSizes);
 				hEditWnd = GetDlgItem(hwnd, IDC_EDIT16);
 				Edit_SetText(hEditWnd, tcharBuff);
 			}
@@ -818,11 +818,10 @@ BOOL initPeFileStruct()
 	}
 	else
 	{// IMAGE_FIRST_SECTION doesn't need 32/64 versions since the file header is the same either way.
-		pImageSectionHeaders = IMAGE_FIRST_SECTION(pImageNtHeader);
 		dbgPrintf(TEXT("read file wasn't PE format!\n"));
 		return bRet;
 	}
-	
+	pImageSectionHeaders = IMAGE_FIRST_SECTION(pImageNtHeader);
 	return bRet;
 }
 
@@ -881,8 +880,8 @@ BOOL CALLBACK DialogProc_Sections(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 VOID InitSectionsListView(HWND hwnd)
 {
 	LV_COLUMN lv;
-	//LV_ITEM lvItem;	
-	//TCHAR tcharBuff[BUFFLENGTHMAX];
+	LV_ITEM lvItem;	
+	TCHAR tcharBuff[BUFFLENGTHMAX];
 	BYTE Name[IMAGE_SIZEOF_SHORT_NAME+1];
 	HWND hListSections;
 	TCHAR listSectionsNames[6][MAX_PATH]={
@@ -908,59 +907,62 @@ VOID InitSectionsListView(HWND hwnd)
 		// ListView_InsertColumn(hListSections, 0, (DWORD)&lv)
 	}
 
+	if( pImageSectionHeaders==NULL )
+		return;
+
 	//显示 Sections 到 hListSections
-// 	for(int i=0; i<dNumberOfSections; i++)
-// 	{
-// 		int j = 0; //TEXT("名称"),
-// 		memset(tcharBuff, 0, sizeof(tcharBuff));
-// 		memset(&lvItem, 0, sizeof(lvItem));
-// 		memcpy_s(Name, sizeof(Name), pImageSectionHeaders[i].Name, IMAGE_SIZEOF_SHORT_NAME);
-// 		CharToTchar((const char*)Name, tcharBuff);
-// 		lvItem.mask = LVIF_TEXT;
-// 		lvItem.pszText = tcharBuff;
-// 		lvItem.iItem = i;
-// 		lvItem.iSubItem = j;
-// 		ListView_InsertItem(hListSections, &lvItem);
-// 
-// 		j++; // TEXT("虚拟大小"),
-// 		_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("%x"), pImageSectionHeaders[i].Misc.VirtualSize);
-// 		lvItem.mask = LVIF_TEXT;
-// 		lvItem.pszText = tcharBuff;
-// 		lvItem.iItem = i;
-// 		lvItem.iSubItem = j;
-// 		ListView_SetItem(hListSections, &lvItem);
-// 
-// 		j++; // TEXT("虚拟偏移"),
-// 		_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("0x%08x"), pImageSectionHeaders[i].VirtualAddress);
-// 		lvItem.mask = LVIF_TEXT;
-// 		lvItem.pszText = tcharBuff;
-// 		lvItem.iItem = i;
-// 		lvItem.iSubItem = j;
-// 		ListView_SetItem(hListSections, &lvItem);
-// 		
-// 
-// 		j++; // TEXT("RAW大小"),
-// 		_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("0x%08x"), pImageSectionHeaders[i].SizeOfRawData);
-// 		lvItem.mask = LVIF_TEXT;
-// 		lvItem.pszText = tcharBuff;
-// 		lvItem.iItem = i;
-// 		lvItem.iSubItem = j;
-// 		ListView_SetItem(hListSections, &lvItem);
-// 
-// 		j++; // TEXT("RAW偏移"),
-// 		_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("0x%08x"), pImageSectionHeaders[i].PointerToRawData);
-// 		lvItem.mask = LVIF_TEXT;
-// 		lvItem.pszText = tcharBuff;
-// 		lvItem.iItem = i;
-// 		lvItem.iSubItem = j;
-// 		ListView_SetItem(hListSections, &lvItem);
-// 
-// 		j++; // TEXT("特征值")
-// 		_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("0x%08x"), pImageSectionHeaders[i].Characteristics);
-// 		lvItem.mask = LVIF_TEXT;
-// 		lvItem.pszText = tcharBuff;
-// 		lvItem.iItem = i;
-// 		lvItem.iSubItem = j;
-// 		ListView_SetItem(hListSections, &lvItem);
-// 	}
+ 	for(int i=0; i<dNumberOfSections; i++)
+ 	{
+ 		int j = 0; //TEXT("名称"),
+ 		memset(tcharBuff, 0, sizeof(tcharBuff));
+ 		memset(&lvItem, 0, sizeof(lvItem));
+ 		memcpy_s(Name, sizeof(Name), pImageSectionHeaders[i].Name, IMAGE_SIZEOF_SHORT_NAME);
+ 		CharToTchar((const char*)Name, tcharBuff);
+ 		lvItem.mask = LVIF_TEXT;
+ 		lvItem.pszText = tcharBuff;
+ 		lvItem.iItem = i;
+ 		lvItem.iSubItem = j;
+ 		ListView_InsertItem(hListSections, &lvItem);
+ 
+ 		j++; // TEXT("虚拟大小"),
+ 		_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("0%08X"), pImageSectionHeaders[i].Misc.VirtualSize);
+ 		lvItem.mask = LVIF_TEXT;
+ 		lvItem.pszText = tcharBuff;
+ 		lvItem.iItem = i;
+ 		lvItem.iSubItem = j;
+ 		ListView_SetItem(hListSections, &lvItem);
+ 
+ 		j++; // TEXT("虚拟偏移"),
+ 		_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("0x%08X"), pImageSectionHeaders[i].VirtualAddress);
+ 		lvItem.mask = LVIF_TEXT;
+ 		lvItem.pszText = tcharBuff;
+ 		lvItem.iItem = i;
+ 		lvItem.iSubItem = j;
+ 		ListView_SetItem(hListSections, &lvItem);
+ 		
+ 
+ 		j++; // TEXT("RAW大小"),
+ 		_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("0x%08X"), pImageSectionHeaders[i].SizeOfRawData);
+ 		lvItem.mask = LVIF_TEXT;
+ 		lvItem.pszText = tcharBuff;
+ 		lvItem.iItem = i;
+ 		lvItem.iSubItem = j;
+ 		ListView_SetItem(hListSections, &lvItem);
+ 
+ 		j++; // TEXT("RAW偏移"),
+ 		_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("0x%08X"), pImageSectionHeaders[i].PointerToRawData);
+ 		lvItem.mask = LVIF_TEXT;
+ 		lvItem.pszText = tcharBuff;
+ 		lvItem.iItem = i;
+ 		lvItem.iSubItem = j;
+ 		ListView_SetItem(hListSections, &lvItem);
+ 
+ 		j++; // TEXT("特征值")
+ 		_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("0x%08X"), pImageSectionHeaders[i].Characteristics);
+ 		lvItem.mask = LVIF_TEXT;
+ 		lvItem.pszText = tcharBuff;
+ 		lvItem.iItem = i;
+ 		lvItem.iSubItem = j;
+ 		ListView_SetItem(hListSections, &lvItem);
+ 	}
 }
