@@ -2,15 +2,16 @@
 
 #include "stdafx.h"
 #include "debugTool.h"
-
-
 #include <CommCtrl.h>
 #pragma  comment(lib, "comctl32.lib")
+
 #define BUFFLENGTHMAX 1024
 #define MAXPROCESS 1024
 #define MAXMODULES  1024
 
+
 //全局变量 imageBase
+#if 1
 HINSTANCE hAppInstance = NULL;
 HWND hwndMainDlg = NULL;
 HWND hwndPeFileDlg = NULL;
@@ -25,11 +26,15 @@ IMAGE_OPTIONAL_HEADER32* pImageOptionHeader32 = NULL;
 IMAGE_OPTIONAL_HEADER64* pImageOptionHeader64 = NULL;
 IMAGE_SECTION_HEADER* pImageSectionHeaders=NULL;
 // WORD dNumberOfSections = 0;  //  pImageFileHeader->NumberOfSections
+// #define IMAGE_NUMBEROF_DIRECTORY_ENTRIES    16
+#endif
 
 //函数声明 
+#if 1
 VOID InitProcessListView(HWND hwnd);
 VOID InitModuleListView(HWND hwnd);
 VOID InitSectionsListView(HWND hwnd);
+VOID InitDirectorys(HWND hwnd);
 VOID EnumProcess(HWND hwnd);
 VOID EnumModules(HWND hListProcess, WPARAM wparam, LPARAM lparam);
 VOID ShowModules(HWND hListModule, DWORD processId);
@@ -40,7 +45,8 @@ BOOL CALLBACK DialogProc_PeFile(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 BOOL CALLBACK DialogProc_Sections(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 void destroyPeFileStruct();
 BOOL initPeFileStruct();
-
+BOOL CALLBACK  DialogProc_Directorys(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+#endif
 // 入口函数，回调函数::C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\include\winbase.h
 int CALLBACK WinMain( __in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance, 
 				__in LPSTR lpCmdLine, __in int nShowCmd )
@@ -106,6 +112,7 @@ BOOL CALLBACK DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		nRet = TRUE;
 		break;
 	case WM_COMMAND:
+#if 1
 		switch( LOWORD(wParam) )
 		{
 		case IDC_BUTTON_OPENPE:
@@ -139,9 +146,11 @@ BOOL CALLBACK DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			break;
 		default:
 			break;
-		}		
+		}
+#endif
 		break;
 	case WM_SYSCOMMAND:
+#if 1
 		switch( (DWORD)wParam )
 		{
 		case SC_CLOSE:
@@ -158,6 +167,7 @@ BOOL CALLBACK DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			nRet = TRUE;
 			break;
 		}
+#endif
 		break;
 	default:
 		break;
@@ -178,7 +188,7 @@ VOID InitProcessListView(HWND hwnd)
 	hListProcess = GetDlgItem(hwnd, IDC_LIST_PROCESS);
 	//设置整行选中
 	SendMessage(hListProcess, LVM_SETEXTENDEDLISTVIEWSTYLE, LVS_EX_FULLROWSELECT, LVS_EX_FULLROWSELECT);
-
+#if 1
 	//第1列
 	lv.mask = LVCF_TEXT | LVCF_WIDTH | LVCF_SUBITEM;
 	lv.pszText = TEXT("进程路径");
@@ -207,7 +217,7 @@ VOID InitProcessListView(HWND hwnd)
 	lv.cx = 100;
 	lv.iSubItem = 3;
 	SendMessage(hListProcess, LVM_INSERTCOLUMN, 3, (DWORD)&lv);
-
+#endif
 	//hThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)EnumProcess, hListProcess, 0, &ThreadId);
 	//WaitForSingleObject(hThread, INFINITE);
 	EnumProcess(hListProcess);
@@ -282,7 +292,7 @@ VOID EnumProcess(HWND hwnd)
 						sizeof(szModName) / sizeof(TCHAR)))
 					{
 						DWORD imageSize = GetModuleSize(szModName);
-
+#if 1
 						// now we got the process, pid, imagebase, imagesize
 						// they are: szModName, processID, hMod, imageSize
 						iSubItem=0;
@@ -326,12 +336,13 @@ VOID EnumProcess(HWND hwnd)
 						ListView_SetItem(hwnd, &lvItem);
 						//SendMessage(hwnd, LVM_SETITEM, 0, (LPARAM)(const LV_ITEM *)(&lvItem));
 						iItem++;
+#endif
 					}
 				}
 				else  // <system Idle Process>
 				{
 					DWORD imageSize = 0;
-
+#if 1
 					// now get the process, pid, imagebase, imagesize
 					// they are: szModName, processID, hMod, imageSize
 					iSubItem=0;
@@ -375,6 +386,7 @@ VOID EnumProcess(HWND hwnd)
 					ListView_SetItem(hwnd, &lvItem);
 					//SendMessage(hwnd, LVM_SETITEM, 0, (LPARAM)(const LV_ITEM *)(&lvItem));
 					iItem++;
+#endif
 				}	
 			}
 			CloseHandle(hProcess);
@@ -489,6 +501,7 @@ VOID ShowModules(HWND hListModule, DWORD processId)
 		memset(szModName, 0, sizeof(szModName));
 		if( GetModuleFileNameEx(hProcess, hMods[i], szModName, sizeof(szModName)/sizeof(TCHAR)) )
 		{
+#if 1
 			iSubItem = 0;
 			DWORD imageSize = GetModuleSize(szModName);
 			// now the informations: szModName, hMods[i], imageSize; 
@@ -519,6 +532,7 @@ VOID ShowModules(HWND hListModule, DWORD processId)
 			lvItem.iSubItem = iSubItem++;
 			lvItem.pszText = tcharBuff;
 			ListView_SetItem(hListModule, &lvItem);
+#endif
 		}
 	}
 	CloseHandle(hProcess);
@@ -749,6 +763,7 @@ BOOL CALLBACK DialogProc_PeFile(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 			nRet = TRUE;
 			break;
 		case IDC_BUTTON_DIRECTORY:
+			DialogBox(hAppInstance, MAKEINTRESOURCE(IDD_DIALOG_PE_DIRECTORYS), NULL, DialogProc_Directorys);
 			nRet = TRUE;
 			break;
 		default:
@@ -913,6 +928,7 @@ VOID InitSectionsListView(HWND hwnd)
 	//显示 Sections 到 hListSections
  	for(int i=0; i<dNumberOfSections; i++)
  	{
+#if 1
  		int j = 0; //TEXT("名称"),
  		memset(tcharBuff, 0, sizeof(tcharBuff));
  		memset(&lvItem, 0, sizeof(lvItem));
@@ -964,5 +980,88 @@ VOID InitSectionsListView(HWND hwnd)
  		lvItem.iItem = i;
  		lvItem.iSubItem = j;
  		ListView_SetItem(hListSections, &lvItem);
+#endif
  	}
+}
+
+//#define IMAGE_NUMBEROF_DIRECTORY_ENTRIES 16
+DWORD IDC_EDIT_RVA_DIRECTORYS[IMAGE_NUMBEROF_DIRECTORY_ENTRIES]= \
+	{ IDC_EDIT_DIRECTORY_1, IDC_EDIT_DIRECTORY_3, IDC_EDIT_DIRECTORY_5, IDC_EDIT_DIRECTORY_7,
+	  IDC_EDIT_DIRECTORY_9, IDC_EDIT_DIRECTORY_11, IDC_EDIT_DIRECTORY_13, IDC_EDIT_DIRECTORY_15,
+	  IDC_EDIT_DIRECTORY_17, IDC_EDIT_DIRECTORY_19, IDC_EDIT_DIRECTORY_21, IDC_EDIT_DIRECTORY_23,
+	  IDC_EDIT_DIRECTORY_25, IDC_EDIT_DIRECTORY_27, IDC_EDIT_DIRECTORY_29, IDC_EDIT_DIRECTORY_31 };
+DWORD IDC_EDIT_SIZE_DIRECTORYS[IMAGE_NUMBEROF_DIRECTORY_ENTRIES]= \
+	{ IDC_EDIT_DIRECTORY_2, IDC_EDIT_DIRECTORY_4, IDC_EDIT_DIRECTORY_6, IDC_EDIT_DIRECTORY_8,
+	  IDC_EDIT_DIRECTORY_10, IDC_EDIT_DIRECTORY_12, IDC_EDIT_DIRECTORY_14, IDC_EDIT_DIRECTORY_16,
+	  IDC_EDIT_DIRECTORY_18, IDC_EDIT_DIRECTORY_20, IDC_EDIT_DIRECTORY_22, IDC_EDIT_DIRECTORY_24,
+	  IDC_EDIT_DIRECTORY_26, IDC_EDIT_DIRECTORY_28, IDC_EDIT_DIRECTORY_30, IDC_EDIT_DIRECTORY_32 };
+
+// DIALOG_DIRECTORY 消息回调函数  处理过的消息返回TRUE 否则返回FALSE
+BOOL CALLBACK  DialogProc_Directorys(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	BOOL bRet = FALSE;
+	switch(uMsg)
+	{
+	case WM_DESTROY:
+		dbgPrintf(TEXT("WM_DESTROY: wParam=%x lParam=%x\n"),wParam, lParam);
+		bRet = TRUE;
+		break;
+	case WM_CLOSE:  // 右上角的x
+		dbgPrintf(TEXT("WM_CLOSE: wParam=%x lParam=%x\n"),wParam, lParam);
+		DestroyWindow(hwnd);
+		bRet = TRUE;
+		break;
+	case WM_INITDIALOG:
+		InitDirectorys(hwnd);
+		bRet = TRUE;
+		break;
+	default:
+		break;
+	}
+	return bRet;
+}
+
+VOID InitDirectorys(HWND hwnd)
+{
+	TCHAR tcharBuff[BUFFLENGTHMAX];
+	DWORD iRva=0, iSize=0;
+	IMAGE_DATA_DIRECTORY* ptrDataDirectory=NULL;
+	DWORD number_directorys = IMAGE_NUMBEROF_DIRECTORY_ENTRIES;
+	HWND hEditWnd=NULL;
+	if( pImageOptionHeader32 != NULL )
+	{
+		number_directorys = pImageOptionHeader32->NumberOfRvaAndSizes;
+		ptrDataDirectory = pImageOptionHeader32->DataDirectory;
+	}
+	else if( pImageOptionHeader64 != NULL )
+	{
+		number_directorys = pImageOptionHeader64->NumberOfRvaAndSizes;
+		ptrDataDirectory = pImageOptionHeader64->DataDirectory;
+	}
+	else
+		return;
+
+	dbgPrintf(TEXT("number_directorys=%d\n"), number_directorys);
+
+	for(int i=0; i < IMAGE_NUMBEROF_DIRECTORY_ENTRIES; i++)
+	{
+		if(i < number_directorys)
+		{
+			iRva = ptrDataDirectory[i].VirtualAddress;
+			iSize = ptrDataDirectory[i].Size;
+		}
+		else
+		{
+			iRva=0; 
+			iSize=0;
+		}
+
+		_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("0x%08X"), iRva);
+		hEditWnd = GetDlgItem(hwnd, IDC_EDIT_RVA_DIRECTORYS[i]);
+		Edit_SetText(hEditWnd, tcharBuff);
+
+		_stprintf_s(tcharBuff, BUFFLENGTHMAX, TEXT("0x%08X"), iSize);
+		hEditWnd = GetDlgItem(hwnd, IDC_EDIT_SIZE_DIRECTORYS[i]);
+		Edit_SetText(hEditWnd, tcharBuff);
+	}
 }
