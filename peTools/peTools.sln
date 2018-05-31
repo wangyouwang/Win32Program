@@ -5,6 +5,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "peTools", "peTools\peTools.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestSubProject", "TestSubProject\TestSubProject.vcxproj", "{9C851CF5-43B6-48FA-B7BF-E3D2A952EBF6}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestDll", "TestDll\TestDll.vcxproj", "{D9171AE6-3DD0-42BB-930F-DCDFA63687A0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -19,6 +21,10 @@ Global
 		{9C851CF5-43B6-48FA-B7BF-E3D2A952EBF6}.Debug|Win32.Build.0 = Debug|Win32
 		{9C851CF5-43B6-48FA-B7BF-E3D2A952EBF6}.Release|Win32.ActiveCfg = Release|Win32
 		{9C851CF5-43B6-48FA-B7BF-E3D2A952EBF6}.Release|Win32.Build.0 = Release|Win32
+		{D9171AE6-3DD0-42BB-930F-DCDFA63687A0}.Debug|Win32.ActiveCfg = Debug|Win32
+		{D9171AE6-3DD0-42BB-930F-DCDFA63687A0}.Debug|Win32.Build.0 = Debug|Win32
+		{D9171AE6-3DD0-42BB-930F-DCDFA63687A0}.Release|Win32.ActiveCfg = Release|Win32
+		{D9171AE6-3DD0-42BB-930F-DCDFA63687A0}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

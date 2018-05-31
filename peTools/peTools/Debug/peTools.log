@@ -1,11 +1,11 @@
-﻿生成启动时间为 周四/5/31 0:10:17。
+﻿生成启动时间为 周五/6/1 0:50:41。
      1>项目“D:\win32Program\Projects\github_Win32Program\peTools\peTools\peTools.vcxproj”在节点 2 上(build 个目标)。
      1>InitializeBuildStatus:
-         正在创建“Debug\peTools.unsuccessfulbuild”，因为已指定“AlwaysCreate”。
+         正在对“Debug\peTools.unsuccessfulbuild”执行 Touch 任务。
        ClCompile:
          D:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt main.cpp
          main.cpp
-     1>d:\win32program\projects\github_win32program\petools\petools\main.cpp(1048): warning C4018: “<”: 有符号/无符号不匹配
+     1>d:\win32program\projects\github_win32program\petools\petools\main.cpp(1096): warning C4018: “<”: 有符号/无符号不匹配
        ResourceCompile:
          所有输出均为最新。
        Link:
@@ -24,4 +24,4 @@
 
 生成成功。
 
-已用时间 00:00:00.88
+已用时间 00:00:00.87

@@ -39,13 +39,16 @@ VOID EnumProcess(HWND hwnd);
 VOID EnumModules(HWND hListProcess, WPARAM wparam, LPARAM lparam);
 VOID ShowModules(HWND hListModule, DWORD processId);
 DWORD GetModuleSize(TCHAR* szModuleName);
+void destroyPeFileStruct();
+BOOL initPeFileStruct();
+DWORD FOA2RVA(IMAGE_SECTION_HEADER* pImageSectionHeader, DWORD numOfSections, DWORD dFOA);
+DWORD RVA2FOA(IMAGE_SECTION_HEADER* pImageSectionHeader, DWORD numOfSections, DWORD dRVA);
 BOOL DlgGetPeFileName(HWND hwnd, TCHAR* fileName, DWORD NameBuffSize);
 BOOL CALLBACK DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK DialogProc_PeFile(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK DialogProc_Sections(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-void destroyPeFileStruct();
-BOOL initPeFileStruct();
 BOOL CALLBACK  DialogProc_Directorys(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+BOOL CALLBACK  DialogProc_ShowInfo(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 #endif
 // 入口函数，回调函数::C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\include\winbase.h
 int CALLBACK WinMain( __in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance, 
@@ -1015,6 +1018,51 @@ BOOL CALLBACK  DialogProc_Directorys(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 		InitDirectorys(hwnd);
 		bRet = TRUE;
 		break;
+	case WM_COMMAND:
+		switch( LOWORD(wParam) )
+		{
+		case IDC_BUTTON_DIRECTORY_EXPORT:
+			DialogBox(hAppInstance, MAKEINTRESOURCE(IDD_DIALOG_DIRECTORY_INFO), NULL, DialogProc_ShowInfo);
+			bRet = TRUE;
+			break;
+#if 1
+		case IDC_BUTTON_DIRECTORY_IMPORT:
+
+			bRet = TRUE;
+			break;
+		case IDC_BUTTON_DIRECTORY_RESOURCE:
+
+			bRet = TRUE;
+			break;
+		case IDC_BUTTON_DIRECTORY_EXCEPTION:
+
+			bRet = TRUE;
+			break;
+		case IDC_BUTTON_DIRECTORY_BASERELOC:
+
+			bRet = TRUE;
+			break;
+		case IDC_BUTTON_DIRECTORY_DEBUG:
+
+			bRet = TRUE;
+			break;
+		case IDC_BUTTON_DIRECTORY_TLS:
+
+			bRet = TRUE;
+			break;
+		case IDC_BUTTON_DIRECTORY_LOAD_CONFIG:
+
+			bRet = TRUE;
+			break;
+		case IDC_BUTTON_DIRECTORY_BOUND_IMPORT:
+
+			bRet = TRUE;
+			break;
+#endif
+		default:
+			break;
+		}
+		break;
 	default:
 		break;
 	}
@@ -1064,4 +1112,118 @@ VOID InitDirectorys(HWND hwnd)
 		hEditWnd = GetDlgItem(hwnd, IDC_EDIT_SIZE_DIRECTORYS[i]);
 		Edit_SetText(hEditWnd, tcharBuff);
 	}
+}
+
+
+// DIALOG_DIRECTORY 消息回调函数  处理过的消息返回TRUE 否则返回FALSE
+BOOL CALLBACK  DialogProc_ShowInfo(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	BOOL bRet = FALSE;
+	switch(uMsg)
+	{
+	case WM_DESTROY:
+		dbgPrintf(TEXT("WM_DESTROY: wParam=%x lParam=%x\n"),wParam, lParam);
+		bRet = TRUE;
+		break;
+	case WM_CLOSE:  // 右上角的x
+		dbgPrintf(TEXT("WM_CLOSE: wParam=%x lParam=%x\n"),wParam, lParam);
+		DestroyWindow(hwnd);
+		bRet = TRUE;
+		break;
+	case WM_INITDIALOG:
+		bRet = TRUE;
+		break;
+	default:
+		break;
+	}
+	return bRet;
+}
+
+
+
+DWORD FOA2RVA(IMAGE_SECTION_HEADER* pImageSectionHeader, DWORD numOfSections, DWORD dFOA)
+{
+	DWORD dRVA = 0;
+	int iSectionBegin = 0;
+	int iSectionEnd = numOfSections;
+	int i = 0;
+	// 找到命中节 break;   // 0 1 2 3 4 5 6  rva=2.3  rva=7
+	while(1)
+	{
+		i = (iSectionBegin + iSectionEnd)/2;   // i = 3   // i = 1  // i = 2 ///i=3 ///i=4  ///i=5 ///i=5
+		if( pImageSectionHeader[i].PointerToRawData <= dFOA 
+			&& dFOA < (pImageSectionHeader[i].PointerToRawData + pImageSectionHeader[i].SizeOfRawData) )
+		{
+			break;
+		}
+		else if( pImageSectionHeader[i].PointerToRawData > dFOA )
+		{
+			iSectionEnd = i - 1;    // 0 1 2 3
+		}
+		else if( dFOA >= (pImageSectionHeader[i].PointerToRawData + pImageSectionHeader[i].SizeOfRawData) )
+		{
+			iSectionBegin = i + 1;  // 1 2 3  /// 3 4 5 6 ///4 5 6 ///5 6
+		}
+		else if( iSectionEnd < iSectionBegin )
+		{
+			i = -1;  // 没找到
+			break;
+		}
+	}
+	if(i >= 0)
+	{
+		dRVA =  dFOA - pImageSectionHeader[i].PointerToRawData + pImageSectionHeader[i].VirtualAddress;
+	}
+	else if( dFOA < pImageSectionHeader[0].PointerToRawData ) // 在文件头
+	{
+		dRVA = dFOA;
+	}
+
+	return dRVA;
+
+}
+/************************************************************************/
+/*
+功能:虚拟内存相对地址dRVA和文件偏移FOA的转换
+*/
+/************************************************************************/
+DWORD RVA2FOA(IMAGE_SECTION_HEADER* pImageSectionHeader, DWORD numOfSections, DWORD dRVA)
+{
+	DWORD dFOA = 0;
+	int iSectionBegin = 0;
+	int iSectionEnd = numOfSections;
+	int i = 0;
+	// 找到命中节 break;   // 0 1 2 3 4 5 6  rva=2.3  rva=7
+	while(1)
+	{
+		i = (iSectionBegin + iSectionEnd)/2;   // i = 3   // i = 1  // i = 2 ///i=3 ///i=4  ///i=5 ///i=5
+		if( pImageSectionHeader[i].VirtualAddress <= dRVA 
+			&& dRVA < (pImageSectionHeader[i].VirtualAddress + pImageSectionHeader[i].Misc.VirtualSize) )
+		{
+			break;
+		}
+		else if( pImageSectionHeader[i].VirtualAddress > dRVA )
+		{
+			iSectionEnd = i - 1;    // 0 1 2 3
+		}
+		else if( dRVA >= (pImageSectionHeader[i].VirtualAddress + pImageSectionHeader[i].Misc.VirtualSize) )
+		{
+			iSectionBegin = i + 1;  // 1 2 3  /// 3 4 5 6 ///4 5 6 ///5 6
+		}
+		else if( iSectionEnd < iSectionBegin )
+		{
+			i = -1; // 没找到
+			break;
+		}
+	}
+	if(i >= 0)
+	{
+		dFOA =  dRVA - pImageSectionHeader[i].VirtualAddress + pImageSectionHeader[i].PointerToRawData;
+	}
+	else if( dRVA < pImageSectionHeader[0].VirtualAddress ) // 在文件头
+	{
+		dFOA = dRVA;
+	}
+	
+	return dFOA;
 }
