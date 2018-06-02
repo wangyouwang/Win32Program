@@ -18,6 +18,7 @@ HWND hwndPeFileDlg = NULL;
 TCHAR peFileName[MAX_PATH]=TEXT("\0");
 BYTE* fileBuffer = NULL;
 DWORD inFileSize = 0;
+DWORD gDirectoryFlags = 0;
 
 IMAGE_DOS_HEADER* pDosHeader = NULL;
 IMAGE_NT_HEADERS* pImageNtHeader = NULL;
@@ -35,6 +36,7 @@ VOID InitProcessListView(HWND hwnd);
 VOID InitModuleListView(HWND hwnd);
 VOID InitSectionsListView(HWND hwnd);
 VOID InitDirectorys(HWND hwnd);
+void initDialogDirectoryInfo(HWND hDialg);
 VOID EnumProcess(HWND hwnd);
 VOID EnumModules(HWND hListProcess, WPARAM wparam, LPARAM lparam);
 VOID ShowModules(HWND hListModule, DWORD processId);
@@ -44,6 +46,8 @@ BOOL initPeFileStruct();
 DWORD FOA2RVA(IMAGE_SECTION_HEADER* pImageSectionHeader, DWORD numOfSections, DWORD dFOA);
 DWORD RVA2FOA(IMAGE_SECTION_HEADER* pImageSectionHeader, DWORD numOfSections, DWORD dRVA);
 BOOL DlgGetPeFileName(HWND hwnd, TCHAR* fileName, DWORD NameBuffSize);
+void fillBufferForExportDirectory(TCHAR* tcharBuff, DWORD dSizeInTchar, IMAGE_EXPORT_DIRECTORY* pImgExportDirectory);
+void fillBufferForImportDirectory(TCHAR* tcharBuff, DWORD dSizeInTchar, IMAGE_IMPORT_DESCRIPTOR* pImgImportDirectory);
 BOOL CALLBACK DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK DialogProc_PeFile(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK DialogProc_Sections(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -1022,40 +1026,49 @@ BOOL CALLBACK  DialogProc_Directorys(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 		switch( LOWORD(wParam) )
 		{
 		case IDC_BUTTON_DIRECTORY_EXPORT:
+			gDirectoryFlags = IDC_BUTTON_DIRECTORY_EXPORT;
 			DialogBox(hAppInstance, MAKEINTRESOURCE(IDD_DIALOG_DIRECTORY_INFO), NULL, DialogProc_ShowInfo);
 			bRet = TRUE;
 			break;
 #if 1
 		case IDC_BUTTON_DIRECTORY_IMPORT:
-
+			gDirectoryFlags = IDC_BUTTON_DIRECTORY_IMPORT;
+			DialogBox(hAppInstance, MAKEINTRESOURCE(IDD_DIALOG_DIRECTORY_INFO), NULL, DialogProc_ShowInfo);
 			bRet = TRUE;
 			break;
 		case IDC_BUTTON_DIRECTORY_RESOURCE:
-
+			gDirectoryFlags = IDC_BUTTON_DIRECTORY_RESOURCE;
+			DialogBox(hAppInstance, MAKEINTRESOURCE(IDD_DIALOG_DIRECTORY_INFO), NULL, DialogProc_ShowInfo);
 			bRet = TRUE;
 			break;
 		case IDC_BUTTON_DIRECTORY_EXCEPTION:
-
+			gDirectoryFlags = IDC_BUTTON_DIRECTORY_EXCEPTION;
+			DialogBox(hAppInstance, MAKEINTRESOURCE(IDD_DIALOG_DIRECTORY_INFO), NULL, DialogProc_ShowInfo);
 			bRet = TRUE;
 			break;
 		case IDC_BUTTON_DIRECTORY_BASERELOC:
-
+			gDirectoryFlags = IDC_BUTTON_DIRECTORY_BASERELOC;
+			DialogBox(hAppInstance, MAKEINTRESOURCE(IDD_DIALOG_DIRECTORY_INFO), NULL, DialogProc_ShowInfo);
 			bRet = TRUE;
 			break;
 		case IDC_BUTTON_DIRECTORY_DEBUG:
-
+			gDirectoryFlags = IDC_BUTTON_DIRECTORY_DEBUG;
+			DialogBox(hAppInstance, MAKEINTRESOURCE(IDD_DIALOG_DIRECTORY_INFO), NULL, DialogProc_ShowInfo);
 			bRet = TRUE;
 			break;
 		case IDC_BUTTON_DIRECTORY_TLS:
-
+			gDirectoryFlags = IDC_BUTTON_DIRECTORY_TLS;
+			DialogBox(hAppInstance, MAKEINTRESOURCE(IDD_DIALOG_DIRECTORY_INFO), NULL, DialogProc_ShowInfo);
 			bRet = TRUE;
 			break;
 		case IDC_BUTTON_DIRECTORY_LOAD_CONFIG:
-
+			gDirectoryFlags = IDC_BUTTON_DIRECTORY_LOAD_CONFIG;
+			DialogBox(hAppInstance, MAKEINTRESOURCE(IDD_DIALOG_DIRECTORY_INFO), NULL, DialogProc_ShowInfo);
 			bRet = TRUE;
 			break;
 		case IDC_BUTTON_DIRECTORY_BOUND_IMPORT:
-
+			gDirectoryFlags = IDC_BUTTON_DIRECTORY_BOUND_IMPORT;
+			DialogBox(hAppInstance, MAKEINTRESOURCE(IDD_DIALOG_DIRECTORY_INFO), NULL, DialogProc_ShowInfo);
 			bRet = TRUE;
 			break;
 #endif
@@ -1091,7 +1104,7 @@ VOID InitDirectorys(HWND hwnd)
 
 	dbgPrintf(TEXT("number_directorys=%d\n"), number_directorys);
 
-	for(int i=0; i < IMAGE_NUMBEROF_DIRECTORY_ENTRIES; i++)
+	for(unsigned int i=0; i < IMAGE_NUMBEROF_DIRECTORY_ENTRIES; i++)
 	{
 		if(i < number_directorys)
 		{
@@ -1131,6 +1144,8 @@ BOOL CALLBACK  DialogProc_ShowInfo(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 		bRet = TRUE;
 		break;
 	case WM_INITDIALOG:
+		dbgPrintf(TEXT("WM_CLOSE: wParam=%x lParam=%x\n"),wParam, lParam);
+		initDialogDirectoryInfo(hwnd);
 		bRet = TRUE;
 		break;
 	default:
@@ -1139,8 +1154,224 @@ BOOL CALLBACK  DialogProc_ShowInfo(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 	return bRet;
 }
 
+void initDialogDirectoryInfo(HWND hDialg)
+{
+	IMAGE_DATA_DIRECTORY* pImageDataDirectory = NULL;
+	if( pImageOptionHeader32!=NULL )
+		pImageDataDirectory = pImageOptionHeader32->DataDirectory;
+	else if( pImageOptionHeader64 != NULL )
+		pImageDataDirectory = pImageOptionHeader64->DataDirectory;
+	assert(pImageDataDirectory);
+	DWORD dFoa = 0;
+	DWORD dRva = 0;
+	//导出表
+	dRva = pImageDataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress; // 0
+	dFoa = RVA2FOA(pImageSectionHeaders, pImageFileHeader->NumberOfSections, dRva);
+	IMAGE_EXPORT_DIRECTORY* pImgExportDirectory = (IMAGE_EXPORT_DIRECTORY*)((BYTE*)pDosHeader + dFoa);
+	//导入表
+	dRva = pImageDataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress; // 1
+	dFoa = RVA2FOA(pImageSectionHeaders, pImageFileHeader->NumberOfSections, dRva);
+	IMAGE_IMPORT_DESCRIPTOR* pImgImportDirectory = (IMAGE_IMPORT_DESCRIPTOR*)((BYTE*)pDosHeader + dFoa);
 
+	HWND hStaticTitle = GetDlgItem(hDialg, IDC_STATIC_DIRECTORY_TITLE);
+	HWND hEditContent = GetDlgItem(hDialg, IDC_EDIT_DIRECTORY_CONTENT);
+	TCHAR tcharBuff[BUFFLENGTHMAX*10] = TEXT("\0");
 
+	switch (gDirectoryFlags)
+	{
+	case IDC_BUTTON_DIRECTORY_EXPORT:
+		Static_SetText(hStaticTitle, TEXT("Export Table Info:"));
+		fillBufferForExportDirectory(tcharBuff, sizeof(tcharBuff)/sizeof(TCHAR), pImgExportDirectory);
+		Edit_SetText(hEditContent, tcharBuff);
+		break;
+	case IDC_BUTTON_DIRECTORY_IMPORT:
+		Static_SetText(hStaticTitle, TEXT("Import Table Info:"));
+		fillBufferForImportDirectory(tcharBuff, sizeof(tcharBuff)/sizeof(TCHAR), pImgImportDirectory);
+		Edit_SetText(hEditContent, tcharBuff);
+		break;
+	default:
+		break;
+	}
+	return ;
+}
+// 打印 导入表信息 到tcharBuff
+void fillBufferForImportDirectory(TCHAR* tcharBuff, DWORD dSizeInTchar,
+	IMAGE_IMPORT_DESCRIPTOR* pImgImportDirectory)
+{
+	// 变量
+	DWORD dRVA=0,dFOA=0;
+	BYTE* pByte=0;
+	//TCHAR* pTchar;
+	//BYTE charBuff[BUFFLENGTHMAX];
+	TCHAR _tcharBuff[BUFFLENGTHMAX];
+	IMAGE_IMPORT_BY_NAME* ptrImageImportByName=NULL;
+	IMAGE_THUNK_DATA64* ptrTrunkData64;
+	IMAGE_THUNK_DATA32* ptrTrunkData32;
+
+	// 外循环 DLL
+	while(1)
+	{
+		if( pImgImportDirectory->Characteristics == 0 ) // 0 for terminating null import descriptor
+			break;		
+		// 打印该DLL的名字
+		dRVA = pImgImportDirectory->Name;
+		dFOA = RVA2FOA(pImageSectionHeaders, pImageFileHeader->NumberOfSections, dRVA);
+		pByte = (BYTE*) ( ((BYTE*)pDosHeader) + dFOA );
+		CharToTchar( (const char*)pByte, _tcharBuff );
+		_tcscat_s( tcharBuff, dSizeInTchar, TEXT("the dll name is: "));
+		_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff );
+		_tcscat_s( tcharBuff, dSizeInTchar, TEXT("\r\n") );
+
+		_stprintf_s(_tcharBuff, BUFFLENGTHMAX, TEXT("OriginalFirstTrunk: %08X\r\nFirstTrunk:%08X\r\n"), 
+			pImgImportDirectory->OriginalFirstThunk, pImgImportDirectory->FirstThunk);
+		_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff );
+		_tcscat_s( tcharBuff, dSizeInTchar, TEXT("\r\n") );
+		if( pImageOptionHeader32 != NULL )
+		{
+			dRVA = pImgImportDirectory->OriginalFirstThunk;
+			dFOA = RVA2FOA(pImageSectionHeaders, pImageFileHeader->NumberOfSections, dRVA);
+			ptrTrunkData32 = (IMAGE_THUNK_DATA32*) ( ((BYTE*)pDosHeader) + dFOA );
+			// 内循环 function names
+			while(1)
+			{
+				if(ptrTrunkData32->u1.AddressOfData == 0)
+					break;
+				
+				dRVA = ptrTrunkData32->u1.AddressOfData;
+				dFOA = RVA2FOA(pImageSectionHeaders, pImageFileHeader->NumberOfSections, dRVA);
+				ptrImageImportByName = (IMAGE_IMPORT_BY_NAME*) ( ((BYTE*)pDosHeader) + dFOA );
+				// 打印 ptrImageImportByName->Hint(WORD) 和 ptrImageImportByName->Name(BYTE*)
+				_stprintf_s(_tcharBuff, BUFFLENGTHMAX, TEXT("Hint:%04X Name:"), ptrImageImportByName->Hint);
+				_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff);
+				pByte =  ptrImageImportByName->Name;
+				CharToTchar( (const char*)pByte, _tcharBuff );
+				_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff);
+				_tcscat_s( tcharBuff, dSizeInTchar,  TEXT("\r\n"));
+				ptrTrunkData32 = ptrTrunkData32 + 1;
+			}
+		}
+
+#if 0
+		else if(pImageOptionHeader64 != NULL)
+		{
+			dRVA = pImgImportDirectory->OriginalFirstThunk;
+			dFOA = RVA2FOA(pImageSectionHeaders, pImageFileHeader->NumberOfSections, dRVA);
+			ptrTrunkData64 = (IMAGE_THUNK_DATA64*) ( ((BYTE*)pDosHeader) + dFOA );
+			// 
+			while(1)
+			{
+				if(ptrTrunkData64->u1.AddressOfData == 0)
+					break;
+				dRVA = (DWORD)ptrTrunkData64->u1.AddressOfData;
+				dFOA = RVA2FOA(pImageSectionHeaders, pImageFileHeader->NumberOfSections, dRVA);
+				ptrImageImportByName = (IMAGE_IMPORT_BY_NAME*) ( ((BYTE*)pDosHeader) + dFOA );
+				// 打印 ptrImageImportByName->Hint(WORD) 和 ptrImageImportByName->Name(BYTE*)
+				_stprintf_s(_tcharBuff, BUFFLENGTHMAX, TEXT("Hint:%04X Name:"), ptrImageImportByName->Hint);
+				_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff);
+				pByte =  ptrImageImportByName->Name;
+				CharToTchar( (const char*)pByte, _tcharBuff );
+				_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff);
+				_tcscat_s( tcharBuff, dSizeInTchar,  TEXT("\r\n"));
+			}
+		}
+#endif
+
+		pImgImportDirectory = pImgImportDirectory + 1;
+	
+	}
+
+	return ;
+}
+
+// 打印 导出表信息 到tcharBuff
+void fillBufferForExportDirectory(TCHAR* tcharBuff, DWORD dSizeInTchar,
+	IMAGE_EXPORT_DIRECTORY* pImgExportDirectory)
+{
+	TCHAR ptmpbuff[BUFFLENGTHMAX];
+	DWORD dFoa = 0;
+	BYTE* pStringAddress = 0;
+	TCHAR* pTstringAddress = new TCHAR[BUFFLENGTHMAX];
+	DWORD* pFunctionAddress = 0;
+	DWORD* pNamesAddress = 0;
+	WORD* pNamesIndexAddress = 0;
+
+	
+	assert(pTstringAddress!=NULL);
+	//_stprintf_s(ptmp, TEXT("%s:%d"),)
+	//_tcscat_s()
+	// 打印 IMAGE_EXPORT_DIRECTORY 信息
+	_stprintf_s(tcharBuff, dSizeInTchar, 
+		TEXT(" Characteristics: %X\r\n TimeDateStamp:%X\r\n MajorVersion: %X\r\n MinorVersion: %X\r\n")\
+		TEXT(" Name:%X\r\n Base:%X\r\n NumberOfFunctions:%d\r\n NumberOfNames:%d\r\n AddressOfFunctions:%X\r\n")\
+		TEXT(" AddressOfNameOrdinals:%X\r\n AddressOfNames:%X\r\n"),
+		pImgExportDirectory->Characteristics, pImgExportDirectory->TimeDateStamp,
+		pImgExportDirectory->MajorVersion, pImgExportDirectory->MinorVersion,
+		pImgExportDirectory->Name, pImgExportDirectory->Base,
+		pImgExportDirectory->NumberOfFunctions, pImgExportDirectory->NumberOfNames, 
+		pImgExportDirectory->AddressOfFunctions, pImgExportDirectory->AddressOfNameOrdinals,
+		pImgExportDirectory->AddressOfNames);
+	// 打印 DLL NAME
+	dFoa = RVA2FOA(pImageSectionHeaders, pImageFileHeader->NumberOfSections, pImgExportDirectory->Name);
+	pStringAddress = ((BYTE*)pDosHeader + dFoa);
+	CharToTchar((const char*)pStringAddress, pTstringAddress);
+	_stprintf_s(ptmpbuff, BUFFLENGTHMAX, TEXT("DllName: %s\r\n"), pTstringAddress);
+	_tcscat_s(tcharBuff, dSizeInTchar, ptmpbuff);
+
+#if 1
+	// 打印函数地址 RVA， 一共有 %d 个(NumberOfFunctions)
+	_stprintf_s(ptmpbuff, BUFFLENGTHMAX, TEXT("Export Function RVA: \r\n") );
+	_tcscat_s(tcharBuff, dSizeInTchar, ptmpbuff);
+	dFoa = RVA2FOA(pImageSectionHeaders, pImageFileHeader->NumberOfSections, pImgExportDirectory->AddressOfFunctions);
+	pFunctionAddress = (DWORD*)((BYTE*)pDosHeader + dFoa);
+	for( unsigned int i=0; i<pImgExportDirectory->NumberOfFunctions; i++ )
+	{
+		DWORD funRva = *(pFunctionAddress+i);
+		if( funRva != 0)
+		{
+			_stprintf_s(ptmpbuff, BUFFLENGTHMAX, TEXT("FunctionRVA%d: (id=%d) %08X\r\n"), i, (i+pImgExportDirectory->Base), funRva );
+			_tcscat_s(tcharBuff, dSizeInTchar, ptmpbuff);
+		}
+	}
+#endif
+
+#if 1
+	// 打印函数名字 ， 一共有 %d 个（NumberOfNames）
+	_stprintf_s(ptmpbuff, BUFFLENGTHMAX, TEXT("Export Function Names: \r\n") );
+	_tcscat_s(tcharBuff, dSizeInTchar, ptmpbuff);
+	dFoa = RVA2FOA(pImageSectionHeaders, pImageFileHeader->NumberOfSections, pImgExportDirectory->AddressOfNames);
+	pNamesAddress = (DWORD*)((BYTE*)pDosHeader + dFoa);
+	for( unsigned int i=0; i<pImgExportDirectory->NumberOfNames; i++ )
+	{
+		// pNameAddress的值为 RVA
+		DWORD nameRva = pNamesAddress[i];
+		DWORD nameFoa = RVA2FOA(pImageSectionHeaders, pImageFileHeader->NumberOfSections, nameRva);
+		pStringAddress = ((BYTE*)pDosHeader + nameFoa);
+		CharToTchar((const char*)pStringAddress, pTstringAddress);
+		_stprintf_s(ptmpbuff, BUFFLENGTHMAX, TEXT("FunctionName%d: %s\r\n"), i, pTstringAddress);
+		_tcscat_s(tcharBuff, dSizeInTchar, ptmpbuff);
+	}
+#endif
+
+#if 1
+	// 打印函数名字序号  ！！！2字节！！！
+	_stprintf_s(ptmpbuff, BUFFLENGTHMAX, TEXT("Export Function Ordinals: \r\n") );
+	_tcscat_s(tcharBuff, dSizeInTchar, ptmpbuff);
+	dFoa = RVA2FOA(pImageSectionHeaders, pImageFileHeader->NumberOfSections, pImgExportDirectory->AddressOfNameOrdinals);
+	pNamesIndexAddress = (WORD*)((BYTE*)pDosHeader + dFoa);
+	for( unsigned int i=0; i<pImgExportDirectory->NumberOfNames; i++ )
+	{
+		_stprintf_s(ptmpbuff, BUFFLENGTHMAX, TEXT("FunctionOrdinals%d %04X\r\n"), i, *(pNamesIndexAddress+i) );
+		_tcscat_s(tcharBuff, dSizeInTchar, ptmpbuff);
+	}
+#endif
+	delete[] pTstringAddress;
+}
+
+/************************************************************************/
+/*
+功能:虚拟内存相对地址dFOA和文件偏移RVA的转换
+*/
+/************************************************************************/
 DWORD FOA2RVA(IMAGE_SECTION_HEADER* pImageSectionHeader, DWORD numOfSections, DWORD dFOA)
 {
 	DWORD dRVA = 0;
@@ -1178,9 +1409,7 @@ DWORD FOA2RVA(IMAGE_SECTION_HEADER* pImageSectionHeader, DWORD numOfSections, DW
 	{
 		dRVA = dFOA;
 	}
-
 	return dRVA;
-
 }
 /************************************************************************/
 /*
@@ -1223,7 +1452,6 @@ DWORD RVA2FOA(IMAGE_SECTION_HEADER* pImageSectionHeader, DWORD numOfSections, DW
 	else if( dRVA < pImageSectionHeader[0].VirtualAddress ) // 在文件头
 	{
 		dFOA = dRVA;
-	}
-	
+	}	
 	return dFOA;
 }

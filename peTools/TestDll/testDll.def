@@ -1,0 +1,6 @@
+LIBRARY testDll
+EXPORTS
+funcAdd @12
+funcSub @13 NONAME
+funcMulti @15
+funcDiv @16

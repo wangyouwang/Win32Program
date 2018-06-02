@@ -5,9 +5,9 @@
 // TESTDLL_API 函数视为是从 DLL 导入的，而此 DLL 则将用此宏定义的
 // 符号视为是被导出的。
 #ifdef TESTDLL_EXPORTS
-#define TESTDLL_API __declspec(dllexport)
+#define TESTDLL_API extern "C" __declspec(dllexport)
 #else
-#define TESTDLL_API __declspec(dllimport)
+#define TESTDLL_API extern "C" __declspec(dllimport)
 #endif
 
 // 类、变量、函数 导出举例
