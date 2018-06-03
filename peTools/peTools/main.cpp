@@ -1208,6 +1208,12 @@ void fillBufferForImportDirectory(TCHAR* tcharBuff, DWORD dSizeInTchar,
 	IMAGE_THUNK_DATA64* ptrTrunkData64;
 	IMAGE_THUNK_DATA32* ptrTrunkData32;
 
+	if((BYTE*)pImgImportDirectory == (BYTE*)pDosHeader)
+	{
+		_tcscat_s(tcharBuff, dSizeInTchar, TEXT("Import is Empty!!\r\n"));
+		return ;
+	}
+
 	// 外循环 DLL
 	while(1)
 	{
@@ -1218,11 +1224,11 @@ void fillBufferForImportDirectory(TCHAR* tcharBuff, DWORD dSizeInTchar,
 		dFOA = RVA2FOA(pImageSectionHeaders, pImageFileHeader->NumberOfSections, dRVA);
 		pByte = (BYTE*) ( ((BYTE*)pDosHeader) + dFOA );
 		CharToTchar( (const char*)pByte, _tcharBuff );
-		_tcscat_s( tcharBuff, dSizeInTchar, TEXT("the dll name is: "));
+		_tcscat_s( tcharBuff, dSizeInTchar, TEXT("\r\nthe dll name is: "));
 		_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff );
 		_tcscat_s( tcharBuff, dSizeInTchar, TEXT("\r\n") );
 
-		_stprintf_s(_tcharBuff, BUFFLENGTHMAX, TEXT("OriginalFirstTrunk: %08X\r\nFirstTrunk:%08X\r\n"), 
+		_stprintf_s(_tcharBuff, BUFFLENGTHMAX, TEXT("OriginalFirstTrunk: %08X\r\nFirstTrunk:%08X"), 
 			pImgImportDirectory->OriginalFirstThunk, pImgImportDirectory->FirstThunk);
 		_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff );
 		_tcscat_s( tcharBuff, dSizeInTchar, TEXT("\r\n") );
@@ -1236,22 +1242,31 @@ void fillBufferForImportDirectory(TCHAR* tcharBuff, DWORD dSizeInTchar,
 			{
 				if(ptrTrunkData32->u1.AddressOfData == 0)
 					break;
-				
-				dRVA = ptrTrunkData32->u1.AddressOfData;
-				dFOA = RVA2FOA(pImageSectionHeaders, pImageFileHeader->NumberOfSections, dRVA);
-				ptrImageImportByName = (IMAGE_IMPORT_BY_NAME*) ( ((BYTE*)pDosHeader) + dFOA );
-				// 打印 ptrImageImportByName->Hint(WORD) 和 ptrImageImportByName->Name(BYTE*)
-				_stprintf_s(_tcharBuff, BUFFLENGTHMAX, TEXT("Hint:%04X Name:"), ptrImageImportByName->Hint);
-				_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff);
-				pByte =  ptrImageImportByName->Name;
-				CharToTchar( (const char*)pByte, _tcharBuff );
-				_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff);
-				_tcscat_s( tcharBuff, dSizeInTchar,  TEXT("\r\n"));
+
+				if( ptrTrunkData32->u1.AddressOfData & IMAGE_ORDINAL_FLAG32 )
+				{     //按序号导入
+					_stprintf_s(_tcharBuff, BUFFLENGTHMAX, TEXT("ID:%06X"), (ptrTrunkData32->u1.AddressOfData & 0x0fff));
+					_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff);
+					_tcscat_s( tcharBuff, dSizeInTchar,  TEXT("\r\n"));
+				}
+				else  //按名字导入
+				{
+					dRVA = ptrTrunkData32->u1.AddressOfData;
+					dFOA = RVA2FOA(pImageSectionHeaders, pImageFileHeader->NumberOfSections, dRVA);
+					ptrImageImportByName = (IMAGE_IMPORT_BY_NAME*) ( ((BYTE*)pDosHeader) + dFOA );
+					// 打印 ptrImageImportByName->Hint(WORD) 和 ptrImageImportByName->Name(BYTE*)
+					_stprintf_s(_tcharBuff, BUFFLENGTHMAX, TEXT("Hint:%04X Name:"), ptrImageImportByName->Hint);
+					_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff);
+					pByte =  ptrImageImportByName->Name;
+					CharToTchar( (const char*)pByte, _tcharBuff );
+					_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff);
+					_tcscat_s( tcharBuff, dSizeInTchar,  TEXT("\r\n"));
+				}
 				ptrTrunkData32 = ptrTrunkData32 + 1;
 			}
 		}
 
-#if 0
+#if 1
 		else if(pImageOptionHeader64 != NULL)
 		{
 			dRVA = pImgImportDirectory->OriginalFirstThunk;
@@ -1262,16 +1277,26 @@ void fillBufferForImportDirectory(TCHAR* tcharBuff, DWORD dSizeInTchar,
 			{
 				if(ptrTrunkData64->u1.AddressOfData == 0)
 					break;
-				dRVA = (DWORD)ptrTrunkData64->u1.AddressOfData;
-				dFOA = RVA2FOA(pImageSectionHeaders, pImageFileHeader->NumberOfSections, dRVA);
-				ptrImageImportByName = (IMAGE_IMPORT_BY_NAME*) ( ((BYTE*)pDosHeader) + dFOA );
-				// 打印 ptrImageImportByName->Hint(WORD) 和 ptrImageImportByName->Name(BYTE*)
-				_stprintf_s(_tcharBuff, BUFFLENGTHMAX, TEXT("Hint:%04X Name:"), ptrImageImportByName->Hint);
-				_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff);
-				pByte =  ptrImageImportByName->Name;
-				CharToTchar( (const char*)pByte, _tcharBuff );
-				_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff);
-				_tcscat_s( tcharBuff, dSizeInTchar,  TEXT("\r\n"));
+				if( ptrTrunkData64->u1.AddressOfData & IMAGE_ORDINAL_FLAG64 )
+				{     //按序号导入
+					_stprintf_s(_tcharBuff, BUFFLENGTHMAX, TEXT("ID:%06x"), (ptrTrunkData64->u1.AddressOfData & 0x0fff));
+					_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff);
+					_tcscat_s( tcharBuff, dSizeInTchar,  TEXT("\r\n"));
+				}
+				else  //按名字导入
+				{
+					dRVA = (DWORD)ptrTrunkData64->u1.AddressOfData;
+					dFOA = RVA2FOA(pImageSectionHeaders, pImageFileHeader->NumberOfSections, dRVA);
+					ptrImageImportByName = (IMAGE_IMPORT_BY_NAME*) ( ((BYTE*)pDosHeader) + dFOA );
+					// 打印 ptrImageImportByName->Hint(WORD) 和 ptrImageImportByName->Name(BYTE*)
+					_stprintf_s(_tcharBuff, BUFFLENGTHMAX, TEXT("Hint:%04X Name:"), ptrImageImportByName->Hint);
+					_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff);
+					pByte =  ptrImageImportByName->Name;
+					CharToTchar( (const char*)pByte, _tcharBuff );
+					_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff);
+					_tcscat_s( tcharBuff, dSizeInTchar,  TEXT("\r\n"));
+				}
+				ptrTrunkData64 = ptrTrunkData64 + 1;
 			}
 		}
 #endif
@@ -1295,6 +1320,12 @@ void fillBufferForExportDirectory(TCHAR* tcharBuff, DWORD dSizeInTchar,
 	DWORD* pNamesAddress = 0;
 	WORD* pNamesIndexAddress = 0;
 
+	if((BYTE*)pImgExportDirectory == (BYTE*)pDosHeader)
+	{
+		_tcscat_s(tcharBuff, dSizeInTchar, TEXT("Export is Empty!!\r\n"));
+		delete[] pTstringAddress;
+		return ;
+	}
 	
 	assert(pTstringAddress!=NULL);
 	//_stprintf_s(ptmp, TEXT("%s:%d"),)
@@ -1364,6 +1395,7 @@ void fillBufferForExportDirectory(TCHAR* tcharBuff, DWORD dSizeInTchar,
 		_tcscat_s(tcharBuff, dSizeInTchar, ptmpbuff);
 	}
 #endif
+
 	delete[] pTstringAddress;
 }
 
@@ -1395,7 +1427,8 @@ DWORD FOA2RVA(IMAGE_SECTION_HEADER* pImageSectionHeader, DWORD numOfSections, DW
 		{
 			iSectionBegin = i + 1;  // 1 2 3  /// 3 4 5 6 ///4 5 6 ///5 6
 		}
-		else if( iSectionEnd < iSectionBegin )
+		
+		if( iSectionEnd < iSectionBegin || iSectionEnd < 0)
 		{
 			i = -1;  // 没找到
 			break;
@@ -1439,7 +1472,8 @@ DWORD RVA2FOA(IMAGE_SECTION_HEADER* pImageSectionHeader, DWORD numOfSections, DW
 		{
 			iSectionBegin = i + 1;  // 1 2 3  /// 3 4 5 6 ///4 5 6 ///5 6
 		}
-		else if( iSectionEnd < iSectionBegin )
+		
+		if( iSectionEnd < iSectionBegin || iSectionEnd < 0 )
 		{
 			i = -1; // 没找到
 			break;

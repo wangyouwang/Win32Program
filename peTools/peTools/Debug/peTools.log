@@ -1,33 +1,26 @@
-﻿生成启动时间为 周六/6/2 23:24:48。
-     1>项目“D:\win32Program\Projects\github_Win32Program\peTools\peTools\peTools.vcxproj”在节点 4 上(rebuild 个目标)。
-     1>_PrepareForClean:
-         正在删除文件“Debug\peTools.lastbuildstate”。
-       InitializeBuildStatus:
+﻿生成启动时间为 周日/6/3 12:18:56。
+     1>项目“D:\win32Program\Projects\github_Win32Program\peTools\peTools\peTools.vcxproj”在节点 2 上(build 个目标)。
+     1>InitializeBuildStatus:
          正在创建“Debug\peTools.unsuccessfulbuild”，因为已指定“AlwaysCreate”。
        ClCompile:
-         D:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt debugTool.cpp functions.cpp main.cpp
+         D:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt main.cpp
          main.cpp
-     1>d:\win32program\projects\github_win32program\petools\petools\main.cpp(1208): warning C4101: “ptrTrunkData64”: 未引用的局部变量
-         functions.cpp
-         debugTool.cpp
-     1>d:\win32program\projects\github_win32program\petools\petools\debugtool.cpp(13): warning C4996: '_vsnwprintf': This function or variable may be unsafe. Consider using _vsnwprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-                 d:\program files (x86)\microsoft visual studio 10.0\vc\include\stdio.h(488) : 参见“_vsnwprintf”的声明
-         正在生成代码...
        ResourceCompile:
-         C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\rc.exe /D _UNICODE /D UNICODE /l"0x0409" /nologo /fo"Debug\peTools.res" peTools.rc 
+         所有输出均为最新。
        Link:
          D:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"D:\win32Program\Projects\github_Win32Program\peTools\Debug\peTools.exe" /NOLOGO Psapi.lib Shlwapi.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /ManifestFile:"Debug\peTools.exe.intermediate.manifest" /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /DEBUG /PDB:"D:\win32Program\Projects\github_Win32Program\peTools\Debug\peTools.pdb" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"D:\win32Program\Projects\github_Win32Program\peTools\Debug\peTools.lib" /MACHINE:X86 Debug\peTools.res
          Debug\debugTool.obj
          Debug\functions.obj
          Debug\main.obj
+         LINK : 没有找到 D:\win32Program\Projects\github_Win32Program\peTools\Debug\peTools.exe 或上一个增量链接没有生成它；正在执行完全链接
          peTools.vcxproj -> D:\win32Program\Projects\github_Win32Program\peTools\Debug\peTools.exe
        Manifest:
          C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\bin\mt.exe /nologo /verbose /outputresource:"D:\win32Program\Projects\github_Win32Program\peTools\Debug\peTools.exe;#1" /manifest Debug\peTools.exe.intermediate.manifest
        FinalizeBuildStatus:
          正在删除文件“Debug\peTools.unsuccessfulbuild”。
          正在对“Debug\peTools.lastbuildstate”执行 Touch 任务。
-     1>已完成生成项目“D:\win32Program\Projects\github_Win32Program\peTools\peTools\peTools.vcxproj”(rebuild 个目标)的操作。
+     1>已完成生成项目“D:\win32Program\Projects\github_Win32Program\peTools\peTools\peTools.vcxproj”(build 个目标)的操作。
 
 生成成功。
 
-已用时间 00:00:02.27
+已用时间 00:00:00.92
