@@ -48,6 +48,8 @@ DWORD RVA2FOA(IMAGE_SECTION_HEADER* pImageSectionHeader, DWORD numOfSections, DW
 BOOL DlgGetPeFileName(HWND hwnd, TCHAR* fileName, DWORD NameBuffSize);
 void fillBufferForExportDirectory(TCHAR* tcharBuff, DWORD dSizeInTchar, IMAGE_EXPORT_DIRECTORY* pImgExportDirectory);
 void fillBufferForImportDirectory(TCHAR* tcharBuff, DWORD dSizeInTchar, IMAGE_IMPORT_DESCRIPTOR* pImgImportDirectory);
+void fillBufferForIatDirectory(TCHAR* tcharBuff, DWORD dSizeInTchar, IMAGE_IMPORT_DESCRIPTOR* pImgIatDirectory);
+void fillBuffForBoundImportDirectory(TCHAR* tcharBuff, DWORD dSizeInTchar, IMAGE_BOUND_IMPORT_DESCRIPTOR* pImgBoundImportDirectory);
 BOOL CALLBACK DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK DialogProc_PeFile(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK DialogProc_Sections(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -1071,6 +1073,11 @@ BOOL CALLBACK  DialogProc_Directorys(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 			DialogBox(hAppInstance, MAKEINTRESOURCE(IDD_DIALOG_DIRECTORY_INFO), NULL, DialogProc_ShowInfo);
 			bRet = TRUE;
 			break;
+		case IDC_BUTTON_DIRECTORY_IAT:
+			gDirectoryFlags = IDC_BUTTON_DIRECTORY_IAT;
+			DialogBox(hAppInstance, MAKEINTRESOURCE(IDD_DIALOG_DIRECTORY_INFO), NULL, DialogProc_ShowInfo);
+			bRet = TRUE;
+			break;
 #endif
 		default:
 			break;
@@ -1173,9 +1180,20 @@ void initDialogDirectoryInfo(HWND hDialg)
 	dFoa = RVA2FOA(pImageSectionHeaders, pImageFileHeader->NumberOfSections, dRva);
 	IMAGE_IMPORT_DESCRIPTOR* pImgImportDirectory = (IMAGE_IMPORT_DESCRIPTOR*)((BYTE*)pDosHeader + dFoa);
 
+	//IAT表  Import Address Tables  必须用 ImportDirectory才能知道 IAT有多少个模块。。。。 
+	//dRva = pImageDataDirectory[IMAGE_DIRECTORY_ENTRY_IAT].VirtualAddress; // 12
+	//dFoa = RVA2FOA(pImageSectionHeaders, pImageFileHeader->NumberOfSections, dRva);
+	// 是32 还是 64位 暂时先不确定，在具体函数中再进行判断，否则还得定义不同的函数
+	//IMAGE_THUNK_DATA* pImgIatDirectory = (IMAGE_THUNK_DATA*)((BYTE*)pDosHeader + dFoa);
+
+	// 绑定导入表 Bound Import Table
+	dRva = pImageDataDirectory[IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT].VirtualAddress; // 11
+	dFoa = RVA2FOA(pImageSectionHeaders, pImageFileHeader->NumberOfSections, dRva);
+	IMAGE_BOUND_IMPORT_DESCRIPTOR* pImgBoundImportDirectory = (IMAGE_BOUND_IMPORT_DESCRIPTOR*)((BYTE*)pDosHeader + dFoa);
+
 	HWND hStaticTitle = GetDlgItem(hDialg, IDC_STATIC_DIRECTORY_TITLE);
 	HWND hEditContent = GetDlgItem(hDialg, IDC_EDIT_DIRECTORY_CONTENT);
-	TCHAR tcharBuff[BUFFLENGTHMAX*10] = TEXT("\0");
+	TCHAR tcharBuff[BUFFLENGTHMAX*100] = TEXT("\0");  //超长了怎么办？？？？
 
 	switch (gDirectoryFlags)
 	{
@@ -1189,11 +1207,79 @@ void initDialogDirectoryInfo(HWND hDialg)
 		fillBufferForImportDirectory(tcharBuff, sizeof(tcharBuff)/sizeof(TCHAR), pImgImportDirectory);
 		Edit_SetText(hEditContent, tcharBuff);
 		break;
+	case IDC_BUTTON_DIRECTORY_BOUND_IMPORT:
+		Static_SetText(hStaticTitle, TEXT("Bound Import Table Info:"));
+		fillBuffForBoundImportDirectory(tcharBuff, sizeof(tcharBuff)/sizeof(TCHAR), pImgBoundImportDirectory);
+		Edit_SetText(hEditContent, tcharBuff);
+		break;
+	case IDC_BUTTON_DIRECTORY_IAT:
+		Static_SetText(hStaticTitle, TEXT("IAT Table Info:"));
+		fillBufferForIatDirectory(tcharBuff, sizeof(tcharBuff)/sizeof(TCHAR), pImgImportDirectory);
+		Edit_SetText(hEditContent, tcharBuff);
+		break;
 	default:
 		break;
 	}
 	return ;
 }
+
+// 打印 绑定导入表信息 到tcharBuff
+void fillBuffForBoundImportDirectory(TCHAR* tcharBuff, DWORD dSizeInTchar, 
+	IMAGE_BOUND_IMPORT_DESCRIPTOR* pImgBoundImportDirectory)
+{
+	// 变量
+	//DWORD dRVA=0,dFOA=0;
+	BYTE* pByte=0;
+	TCHAR _tcharBuff[BUFFLENGTHMAX];
+	IMAGE_BOUND_IMPORT_DESCRIPTOR* ptrBoundImport = pImgBoundImportDirectory;
+	IMAGE_BOUND_IMPORT_DESCRIPTOR empty;
+	memset(&empty,0,sizeof(empty));
+
+	if( (BYTE*)pImgBoundImportDirectory == (BYTE*)pDosHeader )
+	{
+		_tcscat_s(tcharBuff, dSizeInTchar, TEXT("Bound Import Table is Empty!!\r\n"));
+		return ;
+	}
+
+	// 外循环 
+	while(1)
+	{//		IMAGE_BOUND_IMPORT_DESCRIPTOR
+			if( memcmp(ptrBoundImport, &empty, sizeof(IMAGE_BOUND_IMPORT_DESCRIPTOR) ) == 0 ) // 结尾
+				break;
+
+			//打印 ptrBoundImport 信息
+			_stprintf_s(_tcharBuff, BUFFLENGTHMAX, TEXT("TimeDataStamp:%08X\r\nOffsetModuleName:%04X("),
+				ptrBoundImport->TimeDateStamp, ptrBoundImport->OffsetModuleName);
+			_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff );
+			pByte = (BYTE*)pImgBoundImportDirectory + ptrBoundImport->OffsetModuleName;
+			CharToTchar( (const char*)pByte, _tcharBuff );
+			_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff );  // DLL name
+			_tcscat_s( tcharBuff, dSizeInTchar, TEXT(")\r\n") );
+			_stprintf_s(_tcharBuff, BUFFLENGTHMAX, TEXT("NumberOfModuleForwarderRefs:%d\r\n"), ptrBoundImport->NumberOfModuleForwarderRefs);
+			_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff );
+
+			// 内循环
+			for( int i=0; i<ptrBoundImport->NumberOfModuleForwarderRefs; i++)
+			{
+				ptrBoundImport++;
+
+				//打印 ptrBoundImport 信息
+				_stprintf_s(_tcharBuff, BUFFLENGTHMAX, TEXT("TimeDataStamp:%08X\r\nOffsetModuleName:%04X("),
+					ptrBoundImport->TimeDateStamp, ptrBoundImport->OffsetModuleName);
+				_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff );
+				pByte = (BYTE*)pImgBoundImportDirectory + ptrBoundImport->OffsetModuleName;
+				CharToTchar( (const char*)pByte, _tcharBuff );
+				_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff );  // DLL name
+				_tcscat_s( tcharBuff, dSizeInTchar, TEXT(")\r\n") );
+				_stprintf_s(_tcharBuff, BUFFLENGTHMAX, TEXT("Reserved:%d\r\n"), ((IMAGE_BOUND_FORWARDER_REF*)ptrBoundImport)->Reserved);
+				_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff );
+
+			}
+			ptrBoundImport++;
+	}
+	return ;
+}
+
 // 打印 导入表信息 到tcharBuff
 void fillBufferForImportDirectory(TCHAR* tcharBuff, DWORD dSizeInTchar,
 	IMAGE_IMPORT_DESCRIPTOR* pImgImportDirectory)
@@ -1263,6 +1349,7 @@ void fillBufferForImportDirectory(TCHAR* tcharBuff, DWORD dSizeInTchar,
 					_tcscat_s( tcharBuff, dSizeInTchar,  TEXT("\r\n"));
 				}
 				ptrTrunkData32 = ptrTrunkData32 + 1;
+				dbgPrintf(TEXT("__tcharBuff length: %x\n"), _tcsnlen(tcharBuff, dSizeInTchar*sizeof(TCHAR)));
 			}
 		}
 
@@ -1294,15 +1381,133 @@ void fillBufferForImportDirectory(TCHAR* tcharBuff, DWORD dSizeInTchar,
 					pByte =  ptrImageImportByName->Name;
 					CharToTchar( (const char*)pByte, _tcharBuff );
 					_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff);
-					_tcscat_s( tcharBuff, dSizeInTchar,  TEXT("\r\n"));
+					_tcscat_s( tcharBuff, dSizeInTchar,  TEXT("\r\n"));		
 				}
 				ptrTrunkData64 = ptrTrunkData64 + 1;
+				dbgPrintf(TEXT("__tcharBuff length: %x\n"), _tcsnlen(tcharBuff, dSizeInTchar*sizeof(TCHAR)));
 			}
 		}
 #endif
 
 		pImgImportDirectory = pImgImportDirectory + 1;
 	
+	}
+
+	return ;
+}
+
+
+// 打印 IAT表信息 到tcharBuff
+void fillBufferForIatDirectory(TCHAR* tcharBuff, DWORD dSizeInTchar,
+	IMAGE_IMPORT_DESCRIPTOR* pImgImportDirectory)
+{
+	// 变量
+	DWORD dRVA=0,dFOA=0;
+	BYTE* pByte=0;
+	//TCHAR* pTchar;
+	//BYTE charBuff[BUFFLENGTHMAX];
+	TCHAR _tcharBuff[BUFFLENGTHMAX];
+	IMAGE_IMPORT_BY_NAME* ptrImageImportByName=NULL;
+	IMAGE_THUNK_DATA64* ptrTrunkData64;
+	IMAGE_THUNK_DATA32* ptrTrunkData32;
+
+	if((BYTE*)pImgImportDirectory == (BYTE*)pDosHeader)
+	{
+		_tcscat_s(tcharBuff, dSizeInTchar, TEXT("IAT is Empty!!\r\n"));
+		return ;
+	}
+
+	// 外循环 DLL
+	while(1)
+	{
+		if( pImgImportDirectory->Characteristics == 0 ) // 0 for terminating null import descriptor
+			break;
+		// 打印该DLL的名字
+		dRVA = pImgImportDirectory->Name;
+		dFOA = RVA2FOA(pImageSectionHeaders, pImageFileHeader->NumberOfSections, dRVA);
+		pByte = (BYTE*) ( ((BYTE*)pDosHeader) + dFOA );
+		CharToTchar( (const char*)pByte, _tcharBuff );
+		_tcscat_s( tcharBuff, dSizeInTchar, TEXT("\r\nthe dll name is: "));
+		_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff );
+		_tcscat_s( tcharBuff, dSizeInTchar, TEXT("\r\n") );
+
+		_stprintf_s(_tcharBuff, BUFFLENGTHMAX, TEXT("OriginalFirstTrunk: %08X\r\nFirstTrunk:%08X"), 
+			pImgImportDirectory->OriginalFirstThunk, pImgImportDirectory->FirstThunk);
+		_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff );
+		_tcscat_s( tcharBuff, dSizeInTchar, TEXT("\r\n") );
+		if( pImageOptionHeader32 != NULL )
+		{
+			dRVA = pImgImportDirectory->FirstThunk;
+			dFOA = RVA2FOA(pImageSectionHeaders, pImageFileHeader->NumberOfSections, dRVA);
+			ptrTrunkData32 = (IMAGE_THUNK_DATA32*) ( ((BYTE*)pDosHeader) + dFOA );
+			// 内循环 function names
+			while(1)
+			{
+				if(ptrTrunkData32->u1.AddressOfData == 0)
+					break;
+
+				if( ptrTrunkData32->u1.AddressOfData & IMAGE_ORDINAL_FLAG32 )
+				{     //按序号导入
+					_stprintf_s(_tcharBuff, BUFFLENGTHMAX, TEXT("ID:%06X"), (ptrTrunkData32->u1.AddressOfData & 0x0fff));
+					_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff);
+					_tcscat_s( tcharBuff, dSizeInTchar,  TEXT("\r\n"));
+				}
+				else  //按名字导入
+				{
+					dRVA = ptrTrunkData32->u1.AddressOfData;
+					dFOA = RVA2FOA(pImageSectionHeaders, pImageFileHeader->NumberOfSections, dRVA);
+					ptrImageImportByName = (IMAGE_IMPORT_BY_NAME*) ( ((BYTE*)pDosHeader) + dFOA );
+					// 打印 ptrImageImportByName->Hint(WORD) 和 ptrImageImportByName->Name(BYTE*)
+					_stprintf_s(_tcharBuff, BUFFLENGTHMAX, TEXT("Hint:%04X Name:"), ptrImageImportByName->Hint);
+					_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff);
+					pByte =  ptrImageImportByName->Name;
+					CharToTchar( (const char*)pByte, _tcharBuff );
+					_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff);
+					_tcscat_s( tcharBuff, dSizeInTchar,  TEXT("\r\n"));
+				}
+				ptrTrunkData32 = ptrTrunkData32 + 1;
+				dbgPrintf(TEXT("__tcharBuff length: %x\n"), _tcsnlen(tcharBuff, dSizeInTchar*sizeof(TCHAR)));
+			}
+		}
+
+#if 1
+		else if(pImageOptionHeader64 != NULL)
+		{
+			dRVA = pImgImportDirectory->FirstThunk;
+			dFOA = RVA2FOA(pImageSectionHeaders, pImageFileHeader->NumberOfSections, dRVA);
+			ptrTrunkData64 = (IMAGE_THUNK_DATA64*) ( ((BYTE*)pDosHeader) + dFOA );
+			// 
+			while(1)
+			{
+				if(ptrTrunkData64->u1.AddressOfData == 0)
+					break;
+				if( ptrTrunkData64->u1.AddressOfData & IMAGE_ORDINAL_FLAG64 )
+				{     //按序号导入
+					_stprintf_s(_tcharBuff, BUFFLENGTHMAX, TEXT("ID:%06x"), (ptrTrunkData64->u1.AddressOfData & 0x0fff));
+					_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff);
+					_tcscat_s( tcharBuff, dSizeInTchar,  TEXT("\r\n"));
+				}
+				else  //按名字导入
+				{
+					dRVA = (DWORD)ptrTrunkData64->u1.AddressOfData;
+					dFOA = RVA2FOA(pImageSectionHeaders, pImageFileHeader->NumberOfSections, dRVA);
+					ptrImageImportByName = (IMAGE_IMPORT_BY_NAME*) ( ((BYTE*)pDosHeader) + dFOA );
+					// 打印 ptrImageImportByName->Hint(WORD) 和 ptrImageImportByName->Name(BYTE*)
+					_stprintf_s(_tcharBuff, BUFFLENGTHMAX, TEXT("Hint:%04X Name:"), ptrImageImportByName->Hint);
+					_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff);
+					pByte =  ptrImageImportByName->Name;
+					CharToTchar( (const char*)pByte, _tcharBuff );
+					_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff);
+					_tcscat_s( tcharBuff, dSizeInTchar,  TEXT("\r\n"));		
+				}
+				ptrTrunkData64 = ptrTrunkData64 + 1;
+				dbgPrintf(TEXT("__tcharBuff length: %x\n"), _tcsnlen(tcharBuff, dSizeInTchar*sizeof(TCHAR)));
+			}
+		}
+#endif
+
+		pImgImportDirectory = pImgImportDirectory + 1;
+
 	}
 
 	return ;
