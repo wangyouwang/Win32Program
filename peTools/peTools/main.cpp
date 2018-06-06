@@ -50,6 +50,7 @@ void fillBufferForExportDirectory(TCHAR* tcharBuff, DWORD dSizeInTchar, IMAGE_EX
 void fillBufferForImportDirectory(TCHAR* tcharBuff, DWORD dSizeInTchar, IMAGE_IMPORT_DESCRIPTOR* pImgImportDirectory);
 void fillBufferForIatDirectory(TCHAR* tcharBuff, DWORD dSizeInTchar, IMAGE_IMPORT_DESCRIPTOR* pImgIatDirectory);
 void fillBuffForBoundImportDirectory(TCHAR* tcharBuff, DWORD dSizeInTchar, IMAGE_BOUND_IMPORT_DESCRIPTOR* pImgBoundImportDirectory);
+void fillBufferForBaseRelocDirectory(TCHAR* tcharBuff, DWORD dSizeInTchar, IMAGE_BASE_RELOCATION* pImgBaseRelocDirectory);
 BOOL CALLBACK DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK DialogProc_PeFile(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK DialogProc_Sections(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -1191,6 +1192,11 @@ void initDialogDirectoryInfo(HWND hDialg)
 	dFoa = RVA2FOA(pImageSectionHeaders, pImageFileHeader->NumberOfSections, dRva);
 	IMAGE_BOUND_IMPORT_DESCRIPTOR* pImgBoundImportDirectory = (IMAGE_BOUND_IMPORT_DESCRIPTOR*)((BYTE*)pDosHeader + dFoa);
 
+	// 重定位表 Base Relocation Table //IMAGE_DIRECTORY_ENTRY_BASERELOC
+	dRva = pImageDataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC].VirtualAddress; // 5
+	dFoa = RVA2FOA(pImageSectionHeaders, pImageFileHeader->NumberOfSections, dRva);
+	IMAGE_BASE_RELOCATION* pImgBaseRelocDirectory = (IMAGE_BASE_RELOCATION*)((BYTE*)pDosHeader + dFoa);
+
 	HWND hStaticTitle = GetDlgItem(hDialg, IDC_STATIC_DIRECTORY_TITLE);
 	HWND hEditContent = GetDlgItem(hDialg, IDC_EDIT_DIRECTORY_CONTENT);
 	TCHAR tcharBuff[BUFFLENGTHMAX*100] = TEXT("\0");  //超长了怎么办？？？？
@@ -1217,11 +1223,64 @@ void initDialogDirectoryInfo(HWND hDialg)
 		fillBufferForIatDirectory(tcharBuff, sizeof(tcharBuff)/sizeof(TCHAR), pImgImportDirectory);
 		Edit_SetText(hEditContent, tcharBuff);
 		break;
+	case IDC_BUTTON_DIRECTORY_BASERELOC:
+		Static_SetText(hStaticTitle, TEXT("Base Relocation Table Info:"));
+		fillBufferForBaseRelocDirectory(tcharBuff, sizeof(tcharBuff)/sizeof(TCHAR), pImgBaseRelocDirectory);
+		Edit_SetText(hEditContent, tcharBuff);
+		break;
 	default:
 		break;
 	}
 	return ;
 }
+// 打印 重定位表信息 到 tcharBuff
+void fillBufferForBaseRelocDirectory(TCHAR* tcharBuff, DWORD dSizeInTchar, IMAGE_BASE_RELOCATION* pImgBaseRelocDirectory)
+{	
+	// 变量
+	//DWORD dRVA=0,dFOA=0;
+	BYTE* pByte = 0;
+	WORD* pWord = 0;
+	TCHAR _tcharBuff[BUFFLENGTHMAX];
+	IMAGE_BASE_RELOCATION* pTmpBaseRelocDirectory = pImgBaseRelocDirectory;
+
+	if((BYTE*)pTmpBaseRelocDirectory == (BYTE*)pDosHeader)
+	{
+		_tcscat_s(tcharBuff, dSizeInTchar, TEXT("Base Relocation Table is Empty!!\r\n"));
+		return ;
+	}
+	TCHAR BASETYPE_MASK[11][16]={	TEXT("ABSOLUTE:0"),TEXT("HIGH:1"),TEXT("LOW:2"),TEXT("HIGHLOW:3"),TEXT("HIGHADJ:4"),
+									TEXT("MIPS_JMPADDR:5"),TEXT("-6"),TEXT("-7"),TEXT("-8"),TEXT("MIPS16/IA64:9"),
+									TEXT("DIR64")};
+
+	// 外循环
+	while(1)
+	{
+		if(pImgBaseRelocDirectory->VirtualAddress == 0)
+			break;
+
+		// 打印 IMAGE_BASE_RELOCATION 信息
+		//pImgBaseRelocDirectory
+		int NumBlock = (pImgBaseRelocDirectory->SizeOfBlock - 8) / 2;
+		_stprintf_s(_tcharBuff, BUFFLENGTHMAX, TEXT("VirtualAddress: %08X\r\nSizeOfBlock:%08X\tNumBlock:%dD\r\n"), 
+			pImgBaseRelocDirectory->VirtualAddress, pImgBaseRelocDirectory->SizeOfBlock, NumBlock);
+		_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff );
+
+		// 内循环
+		
+		pWord = (WORD*) (((BYTE*)pImgBaseRelocDirectory) + sizeof(IMAGE_BASE_RELOCATION));
+		for(int i=0; i <NumBlock; i++)
+		{
+			 //pWord[i]  打印高4位，低12位
+			BYTE BASETYPE = (BYTE)(pWord[i]>>12);
+			WORD offset = pWord[i] & 0X0FFF;
+			_stprintf_s(_tcharBuff, BUFFLENGTHMAX, TEXT("BASETYPE: %s\toffset:%08X\r\n"), 
+				BASETYPE_MASK[BASETYPE], offset);
+			_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff );
+		}
+		pImgBaseRelocDirectory = (IMAGE_BASE_RELOCATION*)((BYTE*)pImgBaseRelocDirectory + pImgBaseRelocDirectory->SizeOfBlock);
+	}
+}
+
 
 // 打印 绑定导入表信息 到tcharBuff
 void fillBuffForBoundImportDirectory(TCHAR* tcharBuff, DWORD dSizeInTchar, 
