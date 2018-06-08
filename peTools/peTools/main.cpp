@@ -1286,36 +1286,36 @@ void fillBufferForResourceDirectory(TCHAR* tcharBuff, DWORD dSizeInTchar, IMAGE_
 	{
 		//一级目录 打印目录项
 		ptrDirectoryEntryLv1 = &(ptrDirectoryEntry[i]);
-#if 0
+#if 1
 		//DUMMYUNIONNAME
-		if( ptrDirectoryEntryLv1->DUMMYUNIONNAME.NameIsString ) //
+		if( ptrDirectoryEntryLv1->NameIsString ) //
 		{
-			ptrStringU = ((BYTE*)pImgResourceDirectory + ptrDirectoryEntryLv1->DUMMYUNIONNAME.NameOffset);
+			ptrStringU = (IMAGE_RESOURCE_DIR_STRING_U*)((BYTE*)pImgResourceDirectory + ptrDirectoryEntryLv1->NameOffset);
 			pTchar = new TCHAR[ ptrStringU->Length + 1 ];
-			memcpy_s( pTchar, ptrStringU->Length, ptrStringU );
+			memcpy_s( pTchar, ptrStringU->Length, ptrStringU->NameString, ptrStringU->Length);
 			pTchar[ ptrStringU->Length ] = TCHAR(0);
-			_stprintf_s(_tcharBuff, BUFFLENGTHMAX, TEXT("|Name:%s{%08X}\r\n"),  pTchar, ptrDirectoryEntryLv1->DUMMYUNIONNAME.Name);
+			_stprintf_s(_tcharBuff, BUFFLENGTHMAX, TEXT("|Name:%s{%08X}\r\n"),  pTchar, ptrDirectoryEntryLv1->Name);
 			delete[] pTchar;
 			pTchar = NULL;
 		}
 		else
 		{
-			_stprintf_s(_tcharBuff, BUFFLENGTHMAX, TEXT("|Id:%d\r\n"), ptrDirectoryEntryLv1->DUMMYUNIONNAME.Id );
+			_stprintf_s(_tcharBuff, BUFFLENGTHMAX, TEXT("|Id:%d\r\n"), ptrDirectoryEntryLv1->Id );
 		}
 		_tcscat_s(tcharBuff, dSizeInTchar, _tcharBuff);
 #endif
 
-#if 0
+#if 1
 		//DUMMYUNIONNAME2
-		if( ptrDirectoryEntryLv1->DUMMYUNIONNAME2.DataIsDirectory )
+		if( ptrDirectoryEntryLv1->DataIsDirectory )
 		{
 			_stprintf_s(_tcharBuff, BUFFLENGTHMAX, TEXT("|DataIsDirectory:%d, OffsetToDirectory:%08X\r\n"), 
-				ptrDirectoryEntryLv1->DUMMYUNIONNAME2.DataIsDirectory, ptrDirectoryEntryLv1->DUMMYUNIONNAME2.OffsetToDirectory );
+				ptrDirectoryEntryLv1->DataIsDirectory, ptrDirectoryEntryLv1->OffsetToDirectory );
 		}
 		else
 		{
 			_stprintf_s(_tcharBuff, BUFFLENGTHMAX, TEXT("|OffsetToData:%08X\r\n"), 
-				ptrDirectoryEntryLv1->DUMMYUNIONNAME2.OffsetToData);
+				ptrDirectoryEntryLv1->OffsetToData);
 		}
 		_tcscat_s(tcharBuff, dSizeInTchar, _tcharBuff);
 #endif
