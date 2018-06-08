@@ -51,6 +51,7 @@ void fillBufferForImportDirectory(TCHAR* tcharBuff, DWORD dSizeInTchar, IMAGE_IM
 void fillBufferForIatDirectory(TCHAR* tcharBuff, DWORD dSizeInTchar, IMAGE_IMPORT_DESCRIPTOR* pImgIatDirectory);
 void fillBuffForBoundImportDirectory(TCHAR* tcharBuff, DWORD dSizeInTchar, IMAGE_BOUND_IMPORT_DESCRIPTOR* pImgBoundImportDirectory);
 void fillBufferForBaseRelocDirectory(TCHAR* tcharBuff, DWORD dSizeInTchar, IMAGE_BASE_RELOCATION* pImgBaseRelocDirectory);
+void fillBufferForResourceDirectory(TCHAR*tcharBuff, DWORD dSizeInTchar, IMAGE_RESOURCE_DIRECTORY* pImgResourceDirectory);
 BOOL CALLBACK DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK DialogProc_PeFile(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK DialogProc_Sections(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -589,6 +590,7 @@ BOOL CALLBACK DialogProc_PeFile(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 		break;
 	case WM_INITDIALOG:
 		hwndPeFileDlg = hwnd;
+		SetWindowPos(hwnd, NULL, 100, 100, 0, 0, SWP_SHOWWINDOW|SWP_NOSIZE);
 		// init PE file buffer and image buffer 
 		if(TRUE == initPeFileStruct())
 		{
@@ -882,6 +884,7 @@ BOOL CALLBACK DialogProc_Sections(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 		nRet = TRUE;
 		break;
 	case WM_INITDIALOG:
+		SetWindowPos(hwnd, NULL, 100, 100, 0, 0, SWP_SHOWWINDOW|SWP_NOSIZE);
 		InitSectionsListView(hwnd);
 		break;
 	case WM_COMMAND:
@@ -1022,6 +1025,7 @@ BOOL CALLBACK  DialogProc_Directorys(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM
 		bRet = TRUE;
 		break;
 	case WM_INITDIALOG:
+		SetWindowPos(hwnd, NULL, 100, 100, 0, 0, SWP_SHOWWINDOW|SWP_NOSIZE);
 		InitDirectorys(hwnd);
 		bRet = TRUE;
 		break;
@@ -1153,6 +1157,7 @@ BOOL CALLBACK  DialogProc_ShowInfo(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 		break;
 	case WM_INITDIALOG:
 		dbgPrintf(TEXT("WM_CLOSE: wParam=%x lParam=%x\n"),wParam, lParam);
+		SetWindowPos(hwnd, NULL, 100, 100, 0, 0, SWP_SHOWWINDOW|SWP_NOSIZE);
 		initDialogDirectoryInfo(hwnd);
 		bRet = TRUE;
 		break;
@@ -1197,6 +1202,11 @@ void initDialogDirectoryInfo(HWND hDialg)
 	dFoa = RVA2FOA(pImageSectionHeaders, pImageFileHeader->NumberOfSections, dRva);
 	IMAGE_BASE_RELOCATION* pImgBaseRelocDirectory = (IMAGE_BASE_RELOCATION*)((BYTE*)pDosHeader + dFoa);
 
+	// 资源表 IMAGE_RESOURCE_DIRECTORY  IMAGE_RESOURCE_DIRECTORY_ENTRY  IMAGE_RESOURCE_DIR_STRING_U IMAGE_RESOURCE_DATA_ENTRY
+	dRva = pImageDataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE].VirtualAddress; //2
+	dFoa = RVA2FOA(pImageSectionHeaders, pImageFileHeader->NumberOfSections, dRva);
+	IMAGE_RESOURCE_DIRECTORY* pImgResourceDirectory=(IMAGE_RESOURCE_DIRECTORY*)((BYTE*)pDosHeader + dFoa);
+
 	HWND hStaticTitle = GetDlgItem(hDialg, IDC_STATIC_DIRECTORY_TITLE);
 	HWND hEditContent = GetDlgItem(hDialg, IDC_EDIT_DIRECTORY_CONTENT);
 	TCHAR tcharBuff[BUFFLENGTHMAX*100] = TEXT("\0");  //超长了怎么办？？？？
@@ -1213,6 +1223,17 @@ void initDialogDirectoryInfo(HWND hDialg)
 		fillBufferForImportDirectory(tcharBuff, sizeof(tcharBuff)/sizeof(TCHAR), pImgImportDirectory);
 		Edit_SetText(hEditContent, tcharBuff);
 		break;
+	case IDC_BUTTON_DIRECTORY_RESOURCE:
+		Static_SetText(hStaticTitle, TEXT("Resource Table Info:"));
+		fillBufferForResourceDirectory(tcharBuff, sizeof(tcharBuff)/sizeof(TCHAR), pImgResourceDirectory);
+		Edit_SetText(hEditContent, tcharBuff);
+		break;
+#if 1
+	case IDC_BUTTON_DIRECTORY_BASERELOC:
+		Static_SetText(hStaticTitle, TEXT("Base Relocation Table Info:"));
+		fillBufferForBaseRelocDirectory(tcharBuff, sizeof(tcharBuff)/sizeof(TCHAR), pImgBaseRelocDirectory);
+		Edit_SetText(hEditContent, tcharBuff);
+		break;
 	case IDC_BUTTON_DIRECTORY_BOUND_IMPORT:
 		Static_SetText(hStaticTitle, TEXT("Bound Import Table Info:"));
 		fillBuffForBoundImportDirectory(tcharBuff, sizeof(tcharBuff)/sizeof(TCHAR), pImgBoundImportDirectory);
@@ -1223,16 +1244,88 @@ void initDialogDirectoryInfo(HWND hDialg)
 		fillBufferForIatDirectory(tcharBuff, sizeof(tcharBuff)/sizeof(TCHAR), pImgImportDirectory);
 		Edit_SetText(hEditContent, tcharBuff);
 		break;
-	case IDC_BUTTON_DIRECTORY_BASERELOC:
-		Static_SetText(hStaticTitle, TEXT("Base Relocation Table Info:"));
-		fillBufferForBaseRelocDirectory(tcharBuff, sizeof(tcharBuff)/sizeof(TCHAR), pImgBaseRelocDirectory);
-		Edit_SetText(hEditContent, tcharBuff);
-		break;
+#endif
 	default:
 		break;
 	}
 	return ;
 }
+
+// 打印 资源表信息 到 tcharBuff
+void fillBufferForResourceDirectory(TCHAR* tcharBuff, DWORD dSizeInTchar, IMAGE_RESOURCE_DIRECTORY* pImgResourceDirectory)
+{
+	// 变量
+	DWORD dRVA=0,dFOA=0;
+	TCHAR* pTchar = 0;
+	BYTE* pByte = 0;
+	WORD* pWord = 0;
+
+	TCHAR _tcharBuff[BUFFLENGTHMAX];
+	IMAGE_RESOURCE_DIRECTORY_ENTRY* ptrDirectoryEntryLv1=NULL;
+	IMAGE_RESOURCE_DIRECTORY_ENTRY* ptrDirectoryEntryLv2=NULL;
+	IMAGE_RESOURCE_DIRECTORY_ENTRY* ptrDirectoryEntryLv3=NULL;
+	IMAGE_RESOURCE_DIR_STRING_U* ptrStringU = NULL;
+#if 1 
+	if((BYTE*)pImgResourceDirectory == (BYTE*)pDosHeader)
+	{
+		_tcscat_s(tcharBuff, dSizeInTchar, TEXT("Resource Table is Empty!!\r\n"));
+		return ;
+	}
+#endif
+
+
+//一级目录 打印目录头
+	_stprintf_s(_tcharBuff, BUFFLENGTHMAX, TEXT("Characteristics:%08X\tTimeDateStamp:%08X\tMajorVersion:%04X\tMinorVersion:%04X\t")
+		TEXT("NumberOfNamedEntries:%d\tNumberOfIdEntries:%d\r\n"), 
+		pImgResourceDirectory->Characteristics,pImgResourceDirectory->TimeDateStamp,pImgResourceDirectory->MajorVersion,
+		pImgResourceDirectory->MinorVersion,pImgResourceDirectory->NumberOfNamedEntries,pImgResourceDirectory->NumberOfIdEntries);
+	_tcscat_s(tcharBuff, dSizeInTchar, _tcharBuff);
+
+	IMAGE_RESOURCE_DIRECTORY_ENTRY* ptrDirectoryEntry = (IMAGE_RESOURCE_DIRECTORY_ENTRY*)((BYTE*)pImgResourceDirectory + sizeof(IMAGE_RESOURCE_DIRECTORY));
+	for( int i = 0; i < pImgResourceDirectory->NumberOfNamedEntries + pImgResourceDirectory->NumberOfIdEntries; i++ )
+	{
+		//一级目录 打印目录项
+		ptrDirectoryEntryLv1 = &(ptrDirectoryEntry[i]);
+#if 0
+		//DUMMYUNIONNAME
+		if( ptrDirectoryEntryLv1->DUMMYUNIONNAME.NameIsString ) //
+		{
+			ptrStringU = ((BYTE*)pImgResourceDirectory + ptrDirectoryEntryLv1->DUMMYUNIONNAME.NameOffset);
+			pTchar = new TCHAR[ ptrStringU->Length + 1 ];
+			memcpy_s( pTchar, ptrStringU->Length, ptrStringU );
+			pTchar[ ptrStringU->Length ] = TCHAR(0);
+			_stprintf_s(_tcharBuff, BUFFLENGTHMAX, TEXT("|Name:%s{%08X}\r\n"),  pTchar, ptrDirectoryEntryLv1->DUMMYUNIONNAME.Name);
+			delete[] pTchar;
+			pTchar = NULL;
+		}
+		else
+		{
+			_stprintf_s(_tcharBuff, BUFFLENGTHMAX, TEXT("|Id:%d\r\n"), ptrDirectoryEntryLv1->DUMMYUNIONNAME.Id );
+		}
+		_tcscat_s(tcharBuff, dSizeInTchar, _tcharBuff);
+#endif
+
+#if 0
+		//DUMMYUNIONNAME2
+		if( ptrDirectoryEntryLv1->DUMMYUNIONNAME2.DataIsDirectory )
+		{
+			_stprintf_s(_tcharBuff, BUFFLENGTHMAX, TEXT("|DataIsDirectory:%d, OffsetToDirectory:%08X\r\n"), 
+				ptrDirectoryEntryLv1->DUMMYUNIONNAME2.DataIsDirectory, ptrDirectoryEntryLv1->DUMMYUNIONNAME2.OffsetToDirectory );
+		}
+		else
+		{
+			_stprintf_s(_tcharBuff, BUFFLENGTHMAX, TEXT("|OffsetToData:%08X\r\n"), 
+				ptrDirectoryEntryLv1->DUMMYUNIONNAME2.OffsetToData);
+		}
+		_tcscat_s(tcharBuff, dSizeInTchar, _tcharBuff);
+#endif
+
+	}
+
+
+	return ;
+}
+
 // 打印 重定位表信息 到 tcharBuff
 void fillBufferForBaseRelocDirectory(TCHAR* tcharBuff, DWORD dSizeInTchar, IMAGE_BASE_RELOCATION* pImgBaseRelocDirectory)
 {	
