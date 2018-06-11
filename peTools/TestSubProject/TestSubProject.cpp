@@ -78,13 +78,13 @@ void PrintProcessNameAndID( DWORD processID )
 						{
 							// Print the Process name and handle value.
 							_tprintf( TEXT("<process>: %s pid: %d imageBase:0x%08X imagesize:0x%08x\n"),
-								szModName, processID, hMod, imageSize );
+								szModName, processID, (DWORD)hMod, imageSize );
 						}
 						else
 						{
 							// Print the module name and handle value.
 							_tprintf( TEXT("\t<module>: %s imageBase:0x%08X imagesize:0x%08x\n"), 
-								szModName, hMods[i], imageSize );
+								szModName, (DWORD)(hMods[i]), imageSize );
 						}					 
 				 }
 			}

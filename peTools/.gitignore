@@ -161,4 +161,5 @@ $RECYCLE.BIN/
 .DS_Store  
   
 # VisualStudioCode  
-.vscode  
+.vscode
+.vs/

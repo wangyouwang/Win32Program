@@ -1609,7 +1609,7 @@ void fillBufferForImportDirectory(TCHAR* tcharBuff, DWORD dSizeInTchar,
 					// 打印 ptrImageImportByName->Hint(WORD) 和 ptrImageImportByName->Name(BYTE*)
 					_stprintf_s(_tcharBuff, BUFFLENGTHMAX, TEXT("Hint:%04X Name:"), ptrImageImportByName->Hint);
 					_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff);
-					pByte =  ptrImageImportByName->Name;
+					pByte =  (BYTE*)ptrImageImportByName->Name;
 					CharToTchar( (const char*)pByte, _tcharBuff );
 					_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff);
 					_tcscat_s( tcharBuff, dSizeInTchar,  TEXT("\r\n"));
@@ -1632,7 +1632,7 @@ void fillBufferForImportDirectory(TCHAR* tcharBuff, DWORD dSizeInTchar,
 					break;
 				if( ptrTrunkData64->u1.AddressOfData & IMAGE_ORDINAL_FLAG64 )
 				{     //按序号导入
-					_stprintf_s(_tcharBuff, BUFFLENGTHMAX, TEXT("ID:%06x"), (ptrTrunkData64->u1.AddressOfData & 0x0fff));
+					_stprintf_s(_tcharBuff, BUFFLENGTHMAX, TEXT("ID:%06x"), (DWORD)(ptrTrunkData64->u1.AddressOfData & 0x0fff));
 					_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff);
 					_tcscat_s( tcharBuff, dSizeInTchar,  TEXT("\r\n"));
 				}
@@ -1644,7 +1644,7 @@ void fillBufferForImportDirectory(TCHAR* tcharBuff, DWORD dSizeInTchar,
 					// 打印 ptrImageImportByName->Hint(WORD) 和 ptrImageImportByName->Name(BYTE*)
 					_stprintf_s(_tcharBuff, BUFFLENGTHMAX, TEXT("Hint:%04X Name:"), ptrImageImportByName->Hint);
 					_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff);
-					pByte =  ptrImageImportByName->Name;
+					pByte = (BYTE*)ptrImageImportByName->Name;
 					CharToTchar( (const char*)pByte, _tcharBuff );
 					_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff);
 					_tcscat_s( tcharBuff, dSizeInTchar,  TEXT("\r\n"));		
@@ -1726,7 +1726,7 @@ void fillBufferForIatDirectory(TCHAR* tcharBuff, DWORD dSizeInTchar,
 					// 打印 ptrImageImportByName->Hint(WORD) 和 ptrImageImportByName->Name(BYTE*)
 					_stprintf_s(_tcharBuff, BUFFLENGTHMAX, TEXT("Hint:%04X Name:"), ptrImageImportByName->Hint);
 					_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff);
-					pByte =  ptrImageImportByName->Name;
+					pByte = (BYTE*)ptrImageImportByName->Name;
 					CharToTchar( (const char*)pByte, _tcharBuff );
 					_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff);
 					_tcscat_s( tcharBuff, dSizeInTchar,  TEXT("\r\n"));
@@ -1749,7 +1749,7 @@ void fillBufferForIatDirectory(TCHAR* tcharBuff, DWORD dSizeInTchar,
 					break;
 				if( ptrTrunkData64->u1.AddressOfData & IMAGE_ORDINAL_FLAG64 )
 				{     //按序号导入
-					_stprintf_s(_tcharBuff, BUFFLENGTHMAX, TEXT("ID:%06x"), (ptrTrunkData64->u1.AddressOfData & 0x0fff));
+					_stprintf_s(_tcharBuff, BUFFLENGTHMAX, TEXT("ID:%06x"), (DWORD)(ptrTrunkData64->u1.AddressOfData & 0x0fff));
 					_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff);
 					_tcscat_s( tcharBuff, dSizeInTchar,  TEXT("\r\n"));
 				}
@@ -1761,7 +1761,7 @@ void fillBufferForIatDirectory(TCHAR* tcharBuff, DWORD dSizeInTchar,
 					// 打印 ptrImageImportByName->Hint(WORD) 和 ptrImageImportByName->Name(BYTE*)
 					_stprintf_s(_tcharBuff, BUFFLENGTHMAX, TEXT("Hint:%04X Name:"), ptrImageImportByName->Hint);
 					_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff);
-					pByte =  ptrImageImportByName->Name;
+					pByte = (BYTE*)ptrImageImportByName->Name;
 					CharToTchar( (const char*)pByte, _tcharBuff );
 					_tcscat_s( tcharBuff, dSizeInTchar, _tcharBuff);
 					_tcscat_s( tcharBuff, dSizeInTchar,  TEXT("\r\n"));		
