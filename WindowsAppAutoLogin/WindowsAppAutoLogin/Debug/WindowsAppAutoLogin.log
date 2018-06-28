@@ -1,0 +1,11 @@
+﻿  WindowsAppAutoLogin.cpp
+d:\win32program\projects\github_win32program\windowsappautologin\windowsappautologin\windowsappautologin.cpp(103): warning C4018: “<”: 有符号/无符号不匹配
+d:\win32program\projects\github_win32program\windowsappautologin\windowsappautologin\windowsappautologin.cpp(115): warning C4244: “参数”: 从“DWORD”转换到“BYTE”，可能丢失数据
+d:\win32program\projects\github_win32program\windowsappautologin\windowsappautologin\windowsappautologin.cpp(116): warning C4244: “参数”: 从“DWORD”转换到“BYTE”，可能丢失数据
+d:\win32program\projects\github_win32program\windowsappautologin\windowsappautologin\windowsappautologin.cpp(129): warning C4244: “参数”: 从“DWORD”转换到“BYTE”，可能丢失数据
+d:\win32program\projects\github_win32program\windowsappautologin\windowsappautologin\windowsappautologin.cpp(130): warning C4244: “参数”: 从“DWORD”转换到“BYTE”，可能丢失数据
+d:\win32program\projects\github_win32program\windowsappautologin\windowsappautologin\windowsappautologin.cpp(131): warning C4244: “参数”: 从“DWORD”转换到“BYTE”，可能丢失数据
+d:\win32program\projects\github_win32program\windowsappautologin\windowsappautologin\windowsappautologin.cpp(132): warning C4244: “参数”: 从“DWORD”转换到“BYTE”，可能丢失数据
+d:\win32program\projects\github_win32program\windowsappautologin\windowsappautologin\windowsappautologin.cpp(137): warning C4244: “参数”: 从“DWORD”转换到“BYTE”，可能丢失数据
+d:\win32program\projects\github_win32program\windowsappautologin\windowsappautologin\windowsappautologin.cpp(138): warning C4244: “参数”: 从“DWORD”转换到“BYTE”，可能丢失数据
+  WindowsAppAutoLogin.vcxproj -> D:\win32Program\Projects\github_Win32Program\WindowsAppAutoLogin\Debug\WindowsAppAutoLogin.exe
