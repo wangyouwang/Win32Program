@@ -1,7 +1,7 @@
 #include "test.h"
 #include "stdafx.h"
 
-
+// 20180628
 /*
 	不使用额外空间将A、B两链表元素交叉归并
 	方法是采用递归从链表尾端进行归并，实际从汇编来看，递归调用，参数压栈，耗费的空间更多
@@ -67,3 +67,148 @@ void listMerge2(listnode* listA, listnode* listB)
 	}
 }
 
+// 20180629
+// 
+// 输入一个n ，然后在屏幕上打印出NxN 的矩阵！
+// 例如，输入一个3，则
+// 1 2 3
+// 8 9 4
+// 7 6 5
+// 输入一个4，则
+// 01 02 03 04
+// 12 13 14 05
+// 11 16 15 06
+// 10 09 08 07
+//
+
+void printMatrix(int n)
+{
+	int *Matrix = new int[n*n];
+	memset(Matrix, 0, n*n*sizeof(int));
+
+	enum direct {
+		dir_right, dir_down, dir_left, dir_up
+	};
+	//direct dirs[4] = { dir_right, dir_down, dir_left, dir_up };
+
+	direct dd = dir_right; //dirs[0]
+
+
+	printf("START\t\t\t\t\tSTART\n");
+	for (int x = 0; x < n; x++)
+	{
+		for (int y = 0; y < n; y++)
+		{
+			printf("%2d ", Matrix[x*n + y]);
+		}
+		printf("\n");
+	}
+	int c = 1;
+	int i = 0; 
+	int j = 0;
+	while (c <= n*n)
+	{
+		if (Matrix[ i * n + j ] == 0 && i < n && j < n)
+		{
+			printf("步骤：填写 %d\n", c);
+			Matrix[i * n + j] = c++;
+			for (int x = 0; x < n; x++)
+			{
+				for (int y = 0; y < n; y++)
+				{
+					printf("%2d ", Matrix[x*n + y]);
+				}
+				printf("\n");
+			}			
+
+			switch (dd)
+			{
+			case dir_right:
+				j++;
+				break;
+			case dir_down:
+				i++;
+				break;
+			case dir_left:
+				j--;
+				break;
+			case dir_up:
+				i--;
+				break;
+			}
+		}
+		else
+		{
+			switch (dd)
+			{
+			case dir_right:
+				dd = dir_down;
+				j--;
+				i++;
+				break;
+			case dir_down:
+				dd = dir_left;
+				i--;
+				j--;
+				break;
+			case dir_left:
+				dd = dir_up;
+				j++;
+				i--;
+				break;
+			case dir_up:
+				dd = dir_right;
+				i++;
+				j++;
+				break;
+			}
+		}
+	}
+
+	printf("END\t\t\t\t\t\tEND\n");
+	for (int x = 0; x < n; x++)
+	{
+		for (int y = 0; y < n; y++)
+		{
+			printf("%2d ", Matrix[x*n+y]);
+		}
+		printf("\n");
+	}
+	
+	delete[] Matrix;
+	Matrix = NULL;
+}
+
+#define N 10 
+void printCube(int a[][N], int n)
+{
+	int i, j, round = 1;
+	int m = 1;
+	for (i = 0; i < n; i++)
+		a[0][i] = m++;
+	for (i = n - 1; i >= n / 2; i--)
+	{
+		for (j = round; j <= i; j++)  // down
+			a[j][i] = m++;
+		for (j = i; j >= round; j--)  // left
+			a[i][j - 1] = m++;
+		for (j = i; j > round; j--)   // up
+			a[j - 1][round - 1] = m++;
+		for (j = round; j < i; j++)   // right
+			a[round][j] = m++;
+		round++;
+	}
+	for (i = 0; i < n; i++) {
+		for (j = 0; j < n; j++)
+			printf("%3d", a[i][j]);
+		printf("\n");
+	}
+}
+void test3()
+{
+	int a[N][N], n;
+	printf("input n:\n");
+	scanf_s("%d", &n);
+	printCube(&a[0], n);
+	getchar();
+}
