@@ -204,7 +204,7 @@ void printCube(int a[][N], int n)
 		printf("\n");
 	}
 }
-void test3()
+void printCubeTest()
 {
 	int a[N][N], n;
 	printf("input n:\n");
@@ -212,3 +212,23 @@ void test3()
 	printCube(&a[0], n);
 	getchar();
 }
+
+
+//There are two int variables: a and b, don’t use “if”, “? :”, “switch” 
+//or other judgement statements, find out the biggest one of the two numbers. 
+
+#define MAX(X,Y) ( (abs(X-Y)+(X+Y))/2 )
+
+int __cdecl _abs(signed int i)
+{
+	int l, m, n;
+	l = (i >> 31);  // 有符号整数移位，用符号填充。。。。
+	m = l ^ i;
+	n = m - l;
+	// n = ((i>>31)^i) - (i>>31);
+	return  n;
+}
+/* 如果 i>0;  i>>31 = 0; (i>>31) ^ i = i;  i-0=i;
+ * 如果 i<0;  i>>31 = 0xffffffff; (i>>31) ^ i = (0xffffffff-i); 
+ * ((i>>31)^i) - (i>>31)= ((0xffffffff-i) - 0xffffffff) = -i;
+*/
