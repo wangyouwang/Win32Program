@@ -13,6 +13,18 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="源文件\functions">
+      <UniqueIdentifier>{f2f6935a-caa8-4bcf-bb3a-f29e282ac7f5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\functions">
+      <UniqueIdentifier>{ba7c6ce2-0c84-4e72-84ad-eea379a47186}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\test">
+      <UniqueIdentifier>{9413587a-d576-4db0-a7e8-fe99c9fb456c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="头文件\test">
+      <UniqueIdentifier>{4fb3a349-cbf5-48f2-9bde-ac6722d1c6c2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -21,8 +33,11 @@
     <ClInclude Include="targetver.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="test.h">
-      <Filter>头文件</Filter>
+    <ClInclude Include="functions\function1.h">
+      <Filter>头文件\functions</Filter>
+    </ClInclude>
+    <ClInclude Include="test\test1.h">
+      <Filter>头文件\test</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -32,8 +47,11 @@
     <ClCompile Include="algorithm_training.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="test.cpp">
-      <Filter>源文件</Filter>
+    <ClCompile Include="functions\function1.cpp">
+      <Filter>源文件\functions</Filter>
+    </ClCompile>
+    <ClCompile Include="test\test1.cpp">
+      <Filter>源文件\test</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
