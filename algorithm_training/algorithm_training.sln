@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.27703.2035
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "algorithm_training", "algorithm_training\algorithm_training.vcxproj", "{A7319847-F78E-4F57-BC0A-F2733C1F21C2}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Dll_python", "dll\Dll_python\Dll_python.vcxproj", "{243E94E2-1180-4ADF-A985-ED98EBBA5267}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +23,14 @@ Global
 		{A7319847-F78E-4F57-BC0A-F2733C1F21C2}.Release|x64.Build.0 = Release|x64
 		{A7319847-F78E-4F57-BC0A-F2733C1F21C2}.Release|x86.ActiveCfg = Release|Win32
 		{A7319847-F78E-4F57-BC0A-F2733C1F21C2}.Release|x86.Build.0 = Release|Win32
+		{243E94E2-1180-4ADF-A985-ED98EBBA5267}.Debug|x64.ActiveCfg = Debug|x64
+		{243E94E2-1180-4ADF-A985-ED98EBBA5267}.Debug|x64.Build.0 = Debug|x64
+		{243E94E2-1180-4ADF-A985-ED98EBBA5267}.Debug|x86.ActiveCfg = Debug|Win32
+		{243E94E2-1180-4ADF-A985-ED98EBBA5267}.Debug|x86.Build.0 = Debug|Win32
+		{243E94E2-1180-4ADF-A985-ED98EBBA5267}.Release|x64.ActiveCfg = Release|x64
+		{243E94E2-1180-4ADF-A985-ED98EBBA5267}.Release|x64.Build.0 = Release|x64
+		{243E94E2-1180-4ADF-A985-ED98EBBA5267}.Release|x86.ActiveCfg = Release|Win32
+		{243E94E2-1180-4ADF-A985-ED98EBBA5267}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -3,9 +3,9 @@
 
 // 20180628
 /*
-	²»Ê¹ÓÃ¶îÍâ¿Õ¼ä½«A¡¢BÁ½Á´±íÔªËØ½»²æ¹é²¢
-	·½·¨ÊÇ²ÉÓÃµİ¹é´ÓÁ´±íÎ²¶Ë½øĞĞ¹é²¢£¬Êµ¼Ê´Ó»ã±àÀ´¿´£¬µİ¹éµ÷ÓÃ£¬²ÎÊıÑ¹Õ»£¬ºÄ·ÑµÄ¿Õ¼ä¸ü¶à
-	Í¨³£ĞèÒªÔ¤ÏÈÖªµÀÄÄ¸öÁ´±í³¤£¬ÕâÀïÍ¨¹ı·µ»ØÖµ½øĞĞ´«µİ£¬true±íÊ¾listB³¤£¬false±íÊ¾listA³¤
+	ä¸ä½¿ç”¨é¢å¤–ç©ºé—´å°†Aã€Bä¸¤é“¾è¡¨å…ƒç´ äº¤å‰å½’å¹¶
+	æ–¹æ³•æ˜¯é‡‡ç”¨é€’å½’ä»é“¾è¡¨å°¾ç«¯è¿›è¡Œå½’å¹¶ï¼Œå®é™…ä»æ±‡ç¼–æ¥çœ‹ï¼Œé€’å½’è°ƒç”¨ï¼Œå‚æ•°å‹æ ˆï¼Œè€—è´¹çš„ç©ºé—´æ›´å¤š
+	é€šå¸¸éœ€è¦é¢„å…ˆçŸ¥é“å“ªä¸ªé“¾è¡¨é•¿ï¼Œè¿™é‡Œé€šè¿‡è¿”å›å€¼è¿›è¡Œä¼ é€’ï¼Œtrueè¡¨ç¤ºlistBé•¿ï¼Œfalseè¡¨ç¤ºlistAé•¿
 */
 bool listMerge(listnode* listA, listnode* listB)
 {
@@ -43,9 +43,9 @@ bool listMerge(listnode* listA, listnode* listB)
 
 
 
-// ·Çµİ¹éµÄÊµÏÖA¡¢BÁ½¸öÁ´±íµÄ½»²æ¹é²¢
-// Ö»ÄÜËãÊÇÃ»ÓĞĞèÒª¶îÍâµÄ¿Õ¼ä´æ·Å list->data¶øÒÑ
-// ×îÖÕlistAÎª listÍ·
+// éé€’å½’çš„å®ç°Aã€Bä¸¤ä¸ªé“¾è¡¨çš„äº¤å‰å½’å¹¶
+// åªèƒ½ç®—æ˜¯æ²¡æœ‰éœ€è¦é¢å¤–çš„ç©ºé—´å­˜æ”¾ list->dataè€Œå·²
+// æœ€ç»ˆlistAä¸º listå¤´
 void listMerge2(listnode* listA, listnode* listB)
 {
 	listnode *pBCurrent = listB;
@@ -55,8 +55,8 @@ void listMerge2(listnode* listA, listnode* listB)
 
 	while (pBCurrent != NULL && pACurrent != NULL)
 	{
-		pBm_next = pBCurrent->next;//¼ÇÂ¼ÏÂÒ»¸ö´ı²åÔªËØ
-		pAm_next = pACurrent->next;//¼ÇÂ¼²åÈëÎ»ÖÃ
+		pBm_next = pBCurrent->next;//è®°å½•ä¸‹ä¸€ä¸ªå¾…æ’å…ƒç´ 
+		pAm_next = pACurrent->next;//è®°å½•æ’å…¥ä½ç½®
 
 		if( NULL != pACurrent->next)
 			pBCurrent->next = pACurrent->next;
@@ -69,12 +69,12 @@ void listMerge2(listnode* listA, listnode* listB)
 
 // 20180629
 // 
-// ÊäÈëÒ»¸ön £¬È»ºóÔÚÆÁÄ»ÉÏ´òÓ¡³öNxN µÄ¾ØÕó£¡
-// ÀıÈç£¬ÊäÈëÒ»¸ö3£¬Ôò
+// è¾“å…¥ä¸€ä¸ªn ï¼Œç„¶ååœ¨å±å¹•ä¸Šæ‰“å°å‡ºNxN çš„çŸ©é˜µï¼
+// ä¾‹å¦‚ï¼Œè¾“å…¥ä¸€ä¸ª3ï¼Œåˆ™
 // 1 2 3
 // 8 9 4
 // 7 6 5
-// ÊäÈëÒ»¸ö4£¬Ôò
+// è¾“å…¥ä¸€ä¸ª4ï¼Œåˆ™
 // 01 02 03 04
 // 12 13 14 05
 // 11 16 15 06
@@ -110,7 +110,7 @@ void printMatrix(int n)
 	{
 		if (Matrix[ i * n + j ] == 0 && i < n && j < n)
 		{
-			printf("²½Öè£ºÌîĞ´ %d\n", c);
+			printf("æ­¥éª¤ï¼šå¡«å†™ %d\n", c);
 			Matrix[i * n + j] = c++;
 			for (int x = 0; x < n; x++)
 			{
@@ -214,7 +214,7 @@ void printCubeTest()
 }
 
 
-//There are two int variables: a and b, don¡¯t use ¡°if¡±, ¡°? :¡±, ¡°switch¡± 
+//There are two int variables: a and b, donâ€™t use â€œifâ€, â€œ? :â€, â€œswitchâ€ 
 //or other judgement statements, find out the biggest one of the two numbers. 
 
 #define MAX(X,Y) ( (abs(X-Y)+(X+Y))/2 )
@@ -222,13 +222,44 @@ void printCubeTest()
 int __cdecl _abs(signed int i)
 {
 	int l, m, n;
-	l = (i >> 31);  // ÓĞ·ûºÅÕûÊıÒÆÎ»£¬ÓÃ·ûºÅÌî³ä¡£¡£¡£¡£
+	l = (i >> 31);  // æœ‰ç¬¦å·æ•´æ•°ç§»ä½ï¼Œç”¨ç¬¦å·å¡«å……ã€‚ã€‚ã€‚ã€‚
 	m = l ^ i;
 	n = m - l;
 	// n = ((i>>31)^i) - (i>>31);
 	return  n;
 }
-/* Èç¹û i>0;  i>>31 = 0; (i>>31) ^ i = i;  i-0=i;
- * Èç¹û i<0;  i>>31 = 0xffffffff; (i>>31) ^ i = (0xffffffff-i); 
+/* å¦‚æœ i>0;  i>>31 = 0; (i>>31) ^ i = i;  i-0=i;
+ * å¦‚æœ i<0;  i>>31 = 0xffffffff; (i>>31) ^ i = (0xffffffff-i); 
  * ((i>>31)^i) - (i>>31)= ((0xffffffff-i) - 0xffffffff) = -i;
 */
+
+
+
+/* ç«è½¦å †æ ˆé—®é¢˜ */
+/* å…¥æ ˆ 1 2 3 4 5 å‡ºæ ˆ 3 2 1 5 4 */
+int train_stack_out(int maxNum, const char* trainSequence)
+{
+	std::vector<int> trainSeq;
+	int currentTrainId = 0;
+	for (int i = 0; i < maxNum; i++)
+	{
+		int tmpId;
+		trainSeq.clear();
+		trainSeq.reserve(maxNum);
+		currentTrainId = int(trainSequence[i] - '0');
+		for (int j = i + 1; j < maxNum; j++)
+		{
+			tmpId = int(trainSequence[j] - '0');
+			if (tmpId < currentTrainId)
+			{
+				trainSeq.push_back(tmpId);
+
+				if (trainSeq.size() > 1 && trainSeq[trainSeq.size() - 1] > trainSeq[trainSeq.size() - 2])
+				{
+					return 0;
+				}
+			}
+		}
+	}
+	return 1;
+}
