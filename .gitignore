@@ -36,3 +36,5 @@
 ##	proguard/
 ##	# Log Files
 ##	*.log
+.vs
+/WindowsAppAutoLogin/.vs
