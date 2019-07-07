@@ -24,3 +24,8 @@ VS编译方法： （参考链接：https://blog.csdn.net/u012234115/article/det
 C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Visual Studio 2017\Visual Studio Tools\VS 2017的开发人员命令提示符
 cd 到 cpp文件目录
 cl xx.cpp 即可
+
+wol gcc 编译调试：
+cd /mnt/e/win32Program/Projects/github_Win32Program/algorithm_training/51nod
+gcc -g xx.c -o xx.out
+gdb xx.out

@@ -7,7 +7,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\select_pos.cpp">
+    <ClCompile Include="..\gcd.c">
       <Filter>code</Filter>
     </ClCompile>
   </ItemGroup>
