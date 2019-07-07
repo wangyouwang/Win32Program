@@ -1,26 +1,26 @@
-ĞÂ°æµÄ±à³ÌÌôÕ½ÖĞC¼°C++µÄ±àÒëÆ÷ÓÃµÄÊÇMinGW64(4.9.2)£¬VCµÄ±àÒëÆ÷ÎªCL£¬Microsoft (R) C/C++ ÓÅ»¯±àÒëÆ÷ 18.00.30723 °æ
+ï»¿æ–°ç‰ˆçš„ç¼–ç¨‹æŒ‘æˆ˜ä¸­CåŠC++çš„ç¼–è¯‘å™¨ç”¨çš„æ˜¯MinGW64(4.9.2)ï¼ŒVCçš„ç¼–è¯‘å™¨ä¸ºCLï¼ŒMicrosoft (R) C/C++ ä¼˜åŒ–ç¼–è¯‘å™¨ 18.00.30723 ç‰ˆ
 
-Ñ¡ÔñCÓïÑÔµÄÌá½»£¬±àÒë²ÎÊıÎª£º
+é€‰æ‹©Cè¯­è¨€çš„æäº¤ï¼Œç¼–è¯‘å‚æ•°ä¸ºï¼š
 gcc.exe -m64 -pipe -static -lm -s -std=c99 -O2
 
-Ñ¡ÔñC 11ÓïÑÔµÄÌá½»£¬±àÒë²ÎÊıÎª£º
+é€‰æ‹©C 11è¯­è¨€çš„æäº¤ï¼Œç¼–è¯‘å‚æ•°ä¸ºï¼š
 gcc.exe -m64 -pipe -static -lm -s -std=c11 -O2
 
-Ñ¡ÔñC++ÓïÑÔµÄÌá½»£¬±àÒë²ÎÊıÎª£º
+é€‰æ‹©C++è¯­è¨€çš„æäº¤ï¼Œç¼–è¯‘å‚æ•°ä¸ºï¼š
 g++.exe -m64 -pipe -static -lm -s -x c++ -O2
 
-Ñ¡ÔñC++ 11ÓïÑÔµÄÌá½»£¬±àÒë²ÎÊıÎª£º
+é€‰æ‹©C++ 11è¯­è¨€çš„æäº¤ï¼Œç¼–è¯‘å‚æ•°ä¸ºï¼š
 g++.exe -m64 -pipe -static -lm -s -x c++ -std=c++11 -O2
 
-Ñ¡ÔñVisual C++ ÓïÑÔµÄÌá½»£¬±àÒë²ÎÊıÎª£º
+é€‰æ‹©Visual C++ è¯­è¨€çš„æäº¤ï¼Œç¼–è¯‘å‚æ•°ä¸ºï¼š
 cl.exe /O2 /GA /W0 /EHsc /nologo
 
-Ñ¡ÔñObjective-CÓïÑÔµÄÌá½»£¬±àÒë²ÎÊıÎª£º
+é€‰æ‹©Objective-Cè¯­è¨€çš„æäº¤ï¼Œç¼–è¯‘å‚æ•°ä¸ºï¼š
 
  -I ..\Library\Headers -L ..\Library\Libraries -fconstant-string-class=NSConstantString -lobjc -lgnustep-base
  
  
-VS±àÒë·½·¨£º £¨²Î¿¼Á´½Ó£ºhttps://blog.csdn.net/u012234115/article/details/38949681£©
-C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Visual Studio 2017\Visual Studio Tools\VS 2017µÄ¿ª·¢ÈËÔ±ÃüÁîÌáÊ¾·û
-cd µ½ cppÎÄ¼şÄ¿Â¼
-cl xx.cpp ¼´¿É
+VSç¼–è¯‘æ–¹æ³•ï¼š ï¼ˆå‚è€ƒé“¾æ¥ï¼šhttps://blog.csdn.net/u012234115/article/details/38949681ï¼‰
+C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Visual Studio 2017\Visual Studio Tools\VS 2017çš„å¼€å‘äººå‘˜å‘½ä»¤æç¤ºç¬¦
+cd åˆ° cppæ–‡ä»¶ç›®å½•
+cl xx.cpp å³å¯
