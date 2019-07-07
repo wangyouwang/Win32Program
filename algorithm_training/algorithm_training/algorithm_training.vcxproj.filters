@@ -39,6 +39,9 @@
     <ClInclude Include="test\test1.h">
       <Filter>头文件\test</Filter>
     </ClInclude>
+    <ClInclude Include="functions\tree_001.h">
+      <Filter>头文件\functions</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -52,6 +55,9 @@
     </ClCompile>
     <ClCompile Include="test\test1.cpp">
       <Filter>源文件\test</Filter>
+    </ClCompile>
+    <ClCompile Include="functions\tree_001.cpp">
+      <Filter>源文件\functions</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

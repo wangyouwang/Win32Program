@@ -3,6 +3,7 @@
 
 #include "stdafx.h"
 #include "test1.h"
+#include <stdlib.h>
 
 void test1()
 {
@@ -41,26 +42,29 @@ void test7()
     trainStackOutTest();
 }
 
+void test8()
+{
+    treeDepthGetTeset();
+}
+
 int main()
 {
     system("chcp 65001");
 	atexit(functionAfterMain);
 	char c = '\0';
-    char getBuff;
-	while (c != 'q')
+    char getBuff = EOF;
+
 	{
-        test1();
-        test2();
-        test3();
-        test4();
-        test5();
-        test6();
-        test7();
-		printf("结束：enter q to exit:");
-        //fflush(stdin); /*清除输入缓冲区*/
-        while (getBuff = getchar() != '\n' && getBuff != EOF);
-        scanf_s("%c", &c, 1);
-        printf("the input char:%c\n", c);
+        //test1();
+        //test2();
+        //test3();
+        //test4();
+        //test5();
+        //test6();
+        //test7();
+        //test8();
+
+        system("pause");
 	}	
 
     return 0;

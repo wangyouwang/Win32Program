@@ -152,6 +152,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="functions\function1.h" />
+    <ClInclude Include="functions\tree_001.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="test\test1.h" />
@@ -159,6 +160,7 @@
   <ItemGroup>
     <ClCompile Include="algorithm_training.cpp" />
     <ClCompile Include="functions\function1.cpp" />
+    <ClCompile Include="functions\tree_001.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

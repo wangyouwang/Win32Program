@@ -1,0 +1,26 @@
+新版的编程挑战中C及C++的编译器用的是MinGW64(4.9.2)，VC的编译器为CL，Microsoft (R) C/C++ 优化编译器 18.00.30723 版
+
+选择C语言的提交，编译参数为：
+gcc.exe -m64 -pipe -static -lm -s -std=c99 -O2
+
+选择C 11语言的提交，编译参数为：
+gcc.exe -m64 -pipe -static -lm -s -std=c11 -O2
+
+选择C++语言的提交，编译参数为：
+g++.exe -m64 -pipe -static -lm -s -x c++ -O2
+
+选择C++ 11语言的提交，编译参数为：
+g++.exe -m64 -pipe -static -lm -s -x c++ -std=c++11 -O2
+
+选择Visual C++ 语言的提交，编译参数为：
+cl.exe /O2 /GA /W0 /EHsc /nologo
+
+选择Objective-C语言的提交，编译参数为：
+
+ -I ..\Library\Headers -L ..\Library\Libraries -fconstant-string-class=NSConstantString -lobjc -lgnustep-base
+ 
+ 
+VS编译方法： （参考链接：https://blog.csdn.net/u012234115/article/details/38949681）
+C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Visual Studio 2017\Visual Studio Tools\VS 2017的开发人员命令提示符
+cd 到 cpp文件目录
+cl xx.cpp 即可

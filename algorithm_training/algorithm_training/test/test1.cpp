@@ -213,3 +213,17 @@ void functionAfterMain()
     delete lt;
     printf("TIME:%s FUNC:%s, LINE:%d\n", time_str, __FUNCTION__, __LINE__);
 }
+
+#define TreeNodeNum 5
+void treeDepthGetTeset()
+{
+    int relations[(TreeNodeNum - 1) * 2] = {
+        1, 2,
+        1, 3,
+        2, 4,
+        4, 5
+    };
+    int ret = 0;
+    ret = treeDepthGet(TreeNodeNum, relations);
+    printf("tree depth: %d \n", ret);
+}
