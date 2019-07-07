@@ -38,3 +38,4 @@
 ##	*.log
 .vs
 /WindowsAppAutoLogin/.vs
+/algorithm_training/.vscode
