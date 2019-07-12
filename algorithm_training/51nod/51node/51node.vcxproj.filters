@@ -7,7 +7,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\gcd.c">
+    <ClCompile Include="..\rectangle_enum.c">
       <Filter>code</Filter>
     </ClCompile>
   </ItemGroup>
